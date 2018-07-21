@@ -15,11 +15,10 @@ script:
 jobs:
   include:
   - stage: lint
-    python:
-    - 2.7
-    - 3.6
-    script:
-    - pre-commit run -a
+    python: 3.6
+    script: pre-commit run -a
+    python: 2.7
+    script: pre-commit run -a
 
 install:
 - pip install -r requirements-dev.txt
