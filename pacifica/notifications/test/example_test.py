@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Test the example module."""
 from unittest import TestCase
-from pacifica.example import Example
+from pacifica.notifications import Example
 
 
 class TestExample(TestCase):

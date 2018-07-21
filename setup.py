@@ -11,12 +11,12 @@ from setuptools import setup, find_packages
 INSTALL_REQS = parse_requirements('requirements.txt', session='hack')
 
 setup(
-    name='pacifica-service',
+    name='pacifica-notifications',
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
-    description='Pacifica Configuration Parser',
+    description='Pacifica Notifications Service',
     author='David Brown',
-    author_email='david.brown@pnnl.gov',
+    author_email='dmlb2000@gmail.com',
     packages=find_packages(),
     namespace_packages=['pacifica'],
     install_requires=[str(ir.req) for ir in INSTALL_REQS]
