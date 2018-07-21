@@ -15,6 +15,9 @@ script:
 jobs:
   include:
   - stage: lint
+    python:
+    - 2.7
+    - 3.6
     script:
     - pre-commit run -a
 
