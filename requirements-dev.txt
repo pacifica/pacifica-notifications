@@ -1,0 +1,8 @@
+codeclimate-test-reporter
+coverage>4.0,<4.4
+pep257
+pre-commit
+pre-commit
+pylint
+pytest
+setuptools

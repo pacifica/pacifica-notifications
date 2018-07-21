@@ -1,0 +1,22 @@
+language: python
+python:
+- 2.7
+- 3.6
+
+stages:
+- lint
+- test
+
+script:
+- coverage run --include='pacifica/*' -m pytest -v
+- coverage report -m --fail-under 100
+- if [[ $CODECLIMATE_REPO_TOKEN ]] ; then codeclimate-test-reporter; fi
+
+jobs:
+  include:
+  - stage: lint
+    script:
+    - pre-commit run -a
+
+install:
+- pip install -r requirements-dev.txt
