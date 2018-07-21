@@ -3,7 +3,7 @@
 """Example Pacifica Module."""
 
 
-class Example():
+class Example(object):
     """This is an example class in the example module."""
 
     @staticmethod
