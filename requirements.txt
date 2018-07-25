@@ -1,2 +1,6 @@
+cherrypy
+jsonpath-rw
+jsonschema
+peewee
 setuptools
 six

@@ -19,5 +19,10 @@ setup(
     author_email='dmlb2000@gmail.com',
     packages=find_packages(),
     namespace_packages=['pacifica'],
+    entry_points={
+        'console_scripts': [
+            'pacifica-notifications=pacifica.notifications:main'
+        ]
+    },
     install_requires=[str(ir.req) for ir in INSTALL_REQS]
 )
