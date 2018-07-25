@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 """Configuration reading and validation module."""
 try:
     from ConfigParser import SafeConfigParser
