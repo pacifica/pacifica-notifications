@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 """CherryPy module containing classes for rest interface."""
 from json import dumps
-# pylint: disable=no-name-in-module
-from cherrypy import HttpError, expose, tools, request, response
-# pylint: enable=no-name-in-module
+from cherrypy import HTTPError, expose, tools, request, response
 from pacifica.notifications import orm
 from pacifica.notifications.config import get_config
 
@@ -43,7 +41,7 @@ class EventMatch(object):
         objs = [x for x in orm.EventMatch.select(**query).dicts()]
         if objs:
             return objs[0]
-        raise HttpError(404, 'Not Found')
+        raise HTTPError(404, 'Not Found')
 
     @expose
     @tools.json_out()
@@ -68,8 +66,8 @@ class EventMatch(object):
             if objs[0].username == get_remote_user():
                 objs[0].delete_instance()
             else:
-                raise HttpError(401, 'Unauthorized')
-        raise HttpError(404, 'Not Found')
+                raise HTTPError(401, 'Unauthorized')
+        raise HTTPError(404, 'Not Found')
 
 
 # pylint: disable=too-few-public-methods
