@@ -4,7 +4,7 @@
 import uuid
 from datetime import datetime
 from jsonpath_rw import parse
-from peewee import Model, BooleanField, CharField, TextField, DateTimeField, UUIDField
+from peewee import Model, CharField, TextField, DateTimeField, UUIDField
 from playhouse.db_url import connect
 from pacifica.notifications.config import get_config
 
@@ -23,8 +23,9 @@ class EventMatch(Model):
     name = CharField(index=True)
     jsonpath = TextField()
     user = CharField(index=True)
-    enabled = BooleanField(index=True, default=True)
+    disabled = DateTimeField(index=True, null=True, default=None)
     error = TextField(null=True)
+    target_url = TextField()
     created = DateTimeField(default=datetime.now, index=True)
     updated = DateTimeField(default=datetime.now, index=True)
     deleted = DateTimeField(null=True, index=True)

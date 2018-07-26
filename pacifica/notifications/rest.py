@@ -3,8 +3,10 @@
 """CherryPy module containing classes for rest interface."""
 from uuid import UUID
 from json import dumps, loads
+from jsonschema import validate
 import cherrypy
 from cherrypy import HTTPError, tools
+from peewee import DoesNotExist
 from pacifica.notifications import orm
 from pacifica.notifications.config import get_config
 
@@ -29,57 +31,80 @@ class EventMatch(object):
     """CherryPy EventMatch endpoint."""
 
     exposed = True
+    json_put_schema = {}
+    json_post_schema = {}
 
     @staticmethod
-    # pylint: disable=invalid-name
-    def GET(event_uuid=None):
-        """Get the event ID and return it."""
+    def _http_get(event_uuid):
+        """Internal get event by UUID and return peewee obj."""
         orm.EventMatch.connect()
-        if event_uuid:
-            query = orm.EventMatch.uuid == UUID('{{{}}}'.format(event_uuid))
-        else:
-            query = orm.EventMatch.user == get_remote_user()
-        # peewee does dynamic kwargs style of select statements.
-        # pylint: disable=unexpected-keyword-arg
-        objs = [x.to_hash() for x in orm.EventMatch.select().where(query)]
+        try:
+            event_obj = orm.EventMatch.get(
+                orm.EventMatch.uuid == UUID('{{{}}}'.format(event_uuid)))
+        except DoesNotExist:
+            orm.EventMatch.close()
+            raise HTTPError(403, 'Forbidden')
         orm.EventMatch.close()
+        return event_obj
+
+    @classmethod
+    # pylint: disable=invalid-name
+    def GET(cls, event_uuid=None):
+        """Get the event ID and return it."""
+        if event_uuid:
+            objs = cls._http_get(event_uuid).to_hash()
+        else:
+            orm.EventMatch.connect()
+            objs = [x.to_hash() for x in orm.EventMatch.select().where(
+                orm.EventMatch.user == get_remote_user())]
+            orm.EventMatch.close()
         if objs:
-            if event_uuid:
-                return bytes(dumps(objs[0]), 'utf8')
             return bytes(dumps(objs), 'utf8')
-        raise HTTPError(404, 'Not Found')
+        raise HTTPError(403, 'Forbidden')
 
     @tools.json_in()
-    @staticmethod
+    @classmethod
     # pylint: disable=invalid-name
-    def POST():
+    def PUT(cls, event_uuid):
+        """Update an Event Match obj in the database."""
+        event_obj = cls._http_get(event_uuid)
+        if event_obj.user != get_remote_user():
+            raise HTTPError(403, 'Forbidden')
+        json_obj = loads(cherrypy.request.body.read().decode('utf8'))
+        validate(json_obj, cls.json_put_schema)
+        for key, value in json_obj.items():
+            setattr(event_obj, key, value)
+        orm.EventMatch.connect()
+        event_obj.save()
+        orm.EventMatch.close()
+        return cls.GET(str(event_obj.uuid))
+
+    @tools.json_in()
+    @classmethod
+    # pylint: disable=invalid-name
+    def POST(cls):
         """Create an Event Match obj in the database."""
         orm.EventMatch.connect()
         event_match_obj = loads(cherrypy.request.body.read().decode('utf8'))
+        validate(event_match_obj, cls.json_post_schema)
         event_match_obj['user'] = get_remote_user()
         with orm.EventMatch.atomic():
             event_obj = orm.EventMatch(**event_match_obj)
             event_obj.save(force_insert=True)
         orm.EventMatch.close()
-        return EventMatch.GET(event_obj.uuid)
+        return cls.GET(str(event_obj.uuid))
 
-    @staticmethod
+    @classmethod
     # pylint: disable=invalid-name
-    def DELETE(event_uuid):
+    def DELETE(cls, event_uuid):
         """Delete the event by uuid."""
-        # peewee does dynamic kwargs style of select statements.
-        # pylint: disable=unexpected-keyword-arg
-        orm.EventMatch.connect()
-        objs = orm.EventMatch().select().where(
-            orm.EventMatch.uuid == UUID('{{{}}}'.format(event_uuid)))
-        if objs:
-            if objs[0].user == get_remote_user():
-                objs[0].delete_instance()
-                orm.EventMatch.close()
-                return
-            else:
-                raise HTTPError(401, 'Unauthorized')
-        raise HTTPError(404, 'Not Found')
+        event_obj = cls._http_get(event_uuid)
+        if event_obj.user == get_remote_user():
+            orm.EventMatch.connect()
+            event_obj.delete_instance()
+            orm.EventMatch.close()
+            return
+        raise HTTPError(403, 'Forbidden')
 
 
 # pylint: disable=too-few-public-methods
