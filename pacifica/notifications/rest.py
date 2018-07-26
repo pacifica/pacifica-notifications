@@ -1,20 +1,22 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """CherryPy module containing classes for rest interface."""
-from json import dumps
-from cherrypy import HTTPError, expose, tools, request, response
+from uuid import UUID
+from json import dumps, loads
+import cherrypy
+from cherrypy import HTTPError, tools
 from pacifica.notifications import orm
 from pacifica.notifications.config import get_config
 
 
 def get_remote_user():
     """Get the remote user from cherrypy request headers."""
-    return request.headers.get('Http-Remote-User', get_config().get('DEFAULT', 'default_user'))
+    return cherrypy.request.headers.get('Http-Remote-User', get_config().get('DEFAULT', 'default_user'))
 
 
 def error_page_default(**kwargs):
     """The default error page should always enforce json."""
-    response.headers['Content-Type'] = 'application/json'
+    cherrypy.response.headers['Content-Type'] = 'application/json'
     return dumps({
         'status': kwargs['status'],
         'message': kwargs['message'],
@@ -26,45 +28,55 @@ def error_page_default(**kwargs):
 class EventMatch(object):
     """CherryPy EventMatch endpoint."""
 
-    @expose
-    @tools.json_out()
+    exposed = True
+
     @staticmethod
     # pylint: disable=invalid-name
     def GET(event_uuid=None):
         """Get the event ID and return it."""
+        orm.EventMatch.connect()
         if event_uuid:
-            query = {'uuid': event_uuid}
+            query = orm.EventMatch.uuid == UUID('{{{}}}'.format(event_uuid))
         else:
-            query = {'username': get_remote_user()}
+            query = orm.EventMatch.user == get_remote_user()
         # peewee does dynamic kwargs style of select statements.
         # pylint: disable=unexpected-keyword-arg
-        objs = [x for x in orm.EventMatch.select(**query).dicts()]
+        objs = [x.to_hash() for x in orm.EventMatch.select().where(query)]
+        orm.EventMatch.close()
         if objs:
-            return objs[0]
+            if event_uuid:
+                return bytes(dumps(objs[0]), 'utf8')
+            return bytes(dumps(objs), 'utf8')
         raise HTTPError(404, 'Not Found')
 
-    @expose
-    @tools.json_out()
     @tools.json_in()
     @staticmethod
     # pylint: disable=invalid-name
-    def POST(event_match_obj):
+    def POST():
         """Create an Event Match obj in the database."""
-        event_match_obj['username'] = get_remote_user()
-        event_obj = orm.EventMatch(**event_match_obj).save()
+        orm.EventMatch.connect()
+        event_match_obj = loads(cherrypy.request.body.read().decode('utf8'))
+        event_match_obj['user'] = get_remote_user()
+        with orm.EventMatch.atomic():
+            event_obj = orm.EventMatch(**event_match_obj)
+            event_obj.save(force_insert=True)
+        orm.EventMatch.close()
         return EventMatch.GET(event_obj.uuid)
 
-    @expose
     @staticmethod
     # pylint: disable=invalid-name
     def DELETE(event_uuid):
         """Delete the event by uuid."""
         # peewee does dynamic kwargs style of select statements.
         # pylint: disable=unexpected-keyword-arg
-        objs = orm.EventMatch().select(uuid=event_uuid)
+        orm.EventMatch.connect()
+        objs = orm.EventMatch().select().where(
+            orm.EventMatch.uuid == UUID('{{{}}}'.format(event_uuid)))
         if objs:
-            if objs[0].username == get_remote_user():
+            if objs[0].user == get_remote_user():
                 objs[0].delete_instance()
+                orm.EventMatch.close()
+                return
             else:
                 raise HTTPError(401, 'Unauthorized')
         raise HTTPError(404, 'Not Found')
@@ -74,5 +86,6 @@ class EventMatch(object):
 class Root(object):
     """CherryPy Root Object."""
 
+    exposed = True
     eventmatch = EventMatch()
 # pylint: enable=too-few-public-methods
