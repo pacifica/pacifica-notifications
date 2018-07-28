@@ -109,12 +109,9 @@ class EventMatch(object):
     def DELETE(cls, event_uuid):
         """Delete the event by uuid."""
         event_obj = cls._http_get(event_uuid)
-        if event_obj.user == get_remote_user():
-            orm.EventMatch.connect()
-            event_obj.delete_instance()
-            orm.EventMatch.close()
-            return
-        raise HTTPError(403, 'Forbidden')
+        orm.EventMatch.connect()
+        event_obj.delete_instance()
+        orm.EventMatch.close()
 
 
 # pylint: disable=too-few-public-methods
