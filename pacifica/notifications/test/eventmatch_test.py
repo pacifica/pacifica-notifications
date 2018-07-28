@@ -108,3 +108,14 @@ class EventMatchCPTest(helper.CPWebCase):
         self.assertEqual(resp.headers['Content-Type'], 'application/json')
         self.assertEqual(resp.json()['uuid'], uuid)
         self.assertEqual(resp.json()['target_url'], 'http://example.com/1234')
+
+    @eventmatch_droptables
+    def test_not_found(self):
+        """Test the delete method in EventMatch."""
+        resp = requests.get(
+            '{}/eventmatch/1234'.format(self.url)
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue('Content-Type' in resp.headers)
+        self.assertEqual(resp.headers['Content-Type'], 'application/json')
+        self.assertEqual(resp.json()['status'], '404 Not Found')
