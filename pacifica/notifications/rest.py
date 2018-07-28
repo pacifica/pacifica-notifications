@@ -62,8 +62,8 @@ class EventMatch(object):
             return bytes(dumps(objs), 'utf8')
         raise HTTPError(403, 'Forbidden')
 
-    @tools.json_in()
     @classmethod
+    @tools.json_in()
     # pylint: disable=invalid-name
     def PUT(cls, event_uuid):
         """Update an Event Match obj in the database."""
@@ -80,8 +80,8 @@ class EventMatch(object):
         orm.EventMatch.close()
         return cls.GET(str(event_obj.uuid))
 
-    @tools.json_in()
     @classmethod
+    @tools.json_in()
     # pylint: disable=invalid-name
     def POST(cls):
         """Create an Event Match obj in the database."""
