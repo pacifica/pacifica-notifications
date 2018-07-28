@@ -8,6 +8,16 @@ from cherrypy.test import helper
 from pacifica.notifications.rest import orm, Root, error_page_default
 
 
+def eventmatch_droptables(func):
+    """Setup the database and drop it once done."""
+    def wrapper(*args, **kwargs):
+        """Create the database table."""
+        orm.EventMatch.create_table()
+        func(*args, **kwargs)
+        orm.EventMatch.drop_table()
+    return wrapper
+
+
 class EventMatchCPTest(helper.CPWebCase):
     """Test the EventMatch class."""
 
@@ -19,16 +29,9 @@ class EventMatchCPTest(helper.CPWebCase):
     @staticmethod
     def setup_server():
         """Bind tables to in memory db and start service."""
-        orm.EventMatch.create_table()
         cherrypy.config.update({'error_page.default': error_page_default})
         cherrypy.config.update('server.conf')
         cherrypy.tree.mount(Root(), '/', 'server.conf')
-
-    @classmethod
-    def teardown_class(cls):
-        """Destroy tables."""
-        super(EventMatchCPTest, cls).teardown_class()
-        orm.EventMatch.drop_table()
 
     def _create_eventmatch(self):
         """Create a test eventmatch and return resp."""
@@ -42,6 +45,7 @@ class EventMatchCPTest(helper.CPWebCase):
             headers=self.headers
         )
 
+    @eventmatch_droptables
     def test_create(self):
         """Test the create POST method in EventMatch."""
         resp = self._create_eventmatch()
@@ -50,6 +54,7 @@ class EventMatchCPTest(helper.CPWebCase):
         self.assertEqual(resp.headers['Content-Type'], 'application/json')
         self.assertTrue('uuid' in resp.json())
 
+    @eventmatch_droptables
     def test_delete(self):
         """Test the delete method in EventMatch."""
         resp = self._create_eventmatch()
@@ -58,3 +63,47 @@ class EventMatchCPTest(helper.CPWebCase):
             '{}/eventmatch/{}'.format(self.url, uuid)
         )
         self.assertEqual(resp.status_code, 200)
+
+    @eventmatch_droptables
+    def test_get_single(self):
+        """Test the delete method in EventMatch."""
+        resp = self._create_eventmatch()
+        uuid = resp.json()['uuid']
+        resp = requests.get(
+            '{}/eventmatch/{}'.format(self.url, uuid)
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue('Content-Type' in resp.headers)
+        self.assertEqual(resp.headers['Content-Type'], 'application/json')
+        self.assertEqual(resp.json()['uuid'], uuid)
+
+    @eventmatch_droptables
+    def test_get_list(self):
+        """Test the delete method in EventMatch."""
+        resp = self._create_eventmatch()
+        uuid = resp.json()['uuid']
+        resp = requests.get(
+            '{}/eventmatch'.format(self.url)
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue('Content-Type' in resp.headers)
+        self.assertEqual(resp.headers['Content-Type'], 'application/json')
+        self.assertEqual(resp.json()[0]['uuid'], uuid)
+
+    @eventmatch_droptables
+    def test_update(self):
+        """Test the delete method in EventMatch."""
+        resp = self._create_eventmatch()
+        uuid = resp.json()['uuid']
+        resp = requests.put(
+            '{}/eventmatch/{}'.format(self.url, uuid),
+            data=dumps({
+                'target_url': 'http://example.com/1234'
+            }),
+            headers=self.headers
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue('Content-Type' in resp.headers)
+        self.assertEqual(resp.headers['Content-Type'], 'application/json')
+        self.assertEqual(resp.json()['uuid'], uuid)
+        self.assertEqual(resp.json()['target_url'], 'http://example.com/1234')
