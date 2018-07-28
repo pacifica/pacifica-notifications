@@ -11,7 +11,7 @@ from pacifica.notifications.globals import CONFIG_FILE
 def get_config():
     """Return the ConfigParser object with defaults set."""
     configparser = SafeConfigParser({
-        'peewee_url': 'sqliteext:///default.db',
+        'peewee_url': 'sqliteext:///db.sqlite3',
         'default_user': 'default_user'
     })
     configparser.add_section('database')
