@@ -31,7 +31,7 @@ class EventMatch(Model):
     deleted = DateTimeField(null=True, index=True)
 
     # pylint: disable=too-few-public-methods
-    class Meta:
+    class Meta(object):
         """The meta class that contains db connection."""
 
         database = DB

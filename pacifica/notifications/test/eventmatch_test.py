@@ -19,24 +19,20 @@ class EventMatchCPTest(helper.CPWebCase):
     @staticmethod
     def setup_server():
         """Bind tables to in memory db and start service."""
-        print('Entering setup_server().')
         orm.EventMatch.create_table()
         cherrypy.config.update({'error_page.default': error_page_default})
         cherrypy.config.update('server.conf')
         cherrypy.tree.mount(Root(), '/', 'server.conf')
-        print('Finished setup_server().')
 
     @classmethod
     def teardown_class(cls):
         """Destroy tables."""
-        print('Entering teardown_class().')
         super(EventMatchCPTest, cls).teardown_class()
         orm.EventMatch.drop_table()
-        print('Finished teardown_class().')
 
-    def test_create(self):
-        """Test the create POST method in EventMatch."""
-        resp = requests.post(
+    def _create_eventmatch(self):
+        """Create a test eventmatch and return resp."""
+        return requests.post(
             '{}/eventmatch'.format(self.url),
             data=dumps({
                 'name': 'testevent',
@@ -45,6 +41,20 @@ class EventMatchCPTest(helper.CPWebCase):
             }),
             headers=self.headers
         )
+
+    def test_create(self):
+        """Test the create POST method in EventMatch."""
+        resp = self._create_eventmatch()
         self.assertEqual(resp.status_code, 200)
         self.assertTrue('Content-Type' in resp.headers)
         self.assertEqual(resp.headers['Content-Type'], 'application/json')
+        self.assertTrue('uuid' in resp.json())
+
+    def test_delete(self):
+        """Test the delete method in EventMatch."""
+        resp = self._create_eventmatch()
+        uuid = resp.json()['uuid']
+        resp = requests.delete(
+            '{}/eventmatch/{}'.format(self.url, uuid)
+        )
+        self.assertEqual(resp.status_code, 200)
