@@ -14,7 +14,7 @@ from pacifica.notifications.config import get_config
 
 def encode_text(thing_obj):
     """Encode the text to bytes."""
-    if PY2:  # pramga: no cover only for python 2
+    if PY2:  # pragma: no cover only for python 2
         return str(thing_obj)
     return bytes(thing_obj, 'utf8')
 
@@ -54,6 +54,8 @@ class EventMatch(object):
             orm.EventMatch.close()
             raise HTTPError(403, 'Forbidden')
         orm.EventMatch.close()
+        if event_obj.user != get_remote_user():
+            raise HTTPError(403, 'Forbidden')
         return event_obj
 
     @classmethod
