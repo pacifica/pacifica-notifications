@@ -158,3 +158,17 @@ class EventMatchCPTest(helper.CPWebCase):
         self.assertTrue('Content-Type' in resp.headers)
         self.assertEqual(resp.headers['Content-Type'], 'application/json')
         self.assertEqual(resp.json()['status'], '403 Forbidden')
+
+    @eventmatch_droptables
+    def test_delete_wrong_user(self):
+        """Test the delete method in EventMatch."""
+        resp = self._create_eventmatch()
+        uuid = resp.json()['uuid']
+        resp = requests.delete(
+            '{}/eventmatch/{}'.format(self.url, uuid),
+            headers={'Http-Remote-User': 'dmlb2001'}
+        )
+        self.assertEqual(resp.status_code, 403)
+        self.assertTrue('Content-Type' in resp.headers)
+        self.assertEqual(resp.headers['Content-Type'], 'application/json')
+        self.assertEqual(resp.json()['status'], '403 Forbidden')

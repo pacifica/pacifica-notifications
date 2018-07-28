@@ -16,7 +16,7 @@ def encode_text(thing_obj):
     """Encode the text to bytes."""
     if PY2:  # pragma: no cover only for python 2
         return str(thing_obj)
-    return bytes(thing_obj, 'utf8')
+    return bytes(thing_obj, 'utf8')  # pragma: no cover only for python 3
 
 
 def get_remote_user():
@@ -79,8 +79,6 @@ class EventMatch(object):
     def PUT(cls, event_uuid):
         """Update an Event Match obj in the database."""
         event_obj = cls._http_get(event_uuid)
-        if event_obj.user != get_remote_user():
-            raise HTTPError(403, 'Forbidden')
         json_obj = loads(cherrypy.request.body.read().decode('utf8'))
         validate(json_obj, cls.json_put_schema)
         for key, value in json_obj.items():
