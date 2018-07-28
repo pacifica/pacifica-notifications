@@ -74,6 +74,7 @@ class EventMatch(object):
         validate(json_obj, cls.json_put_schema)
         for key, value in json_obj.items():
             setattr(event_obj, key, value)
+        event_obj.validate_jsonpath()
         orm.EventMatch.connect()
         event_obj.save()
         orm.EventMatch.close()
@@ -90,6 +91,7 @@ class EventMatch(object):
         event_match_obj['user'] = get_remote_user()
         with orm.EventMatch.atomic():
             event_obj = orm.EventMatch(**event_match_obj)
+            event_obj.validate_jsonpath()
             event_obj.save(force_insert=True)
         orm.EventMatch.close()
         return cls.GET(str(event_obj.uuid))
