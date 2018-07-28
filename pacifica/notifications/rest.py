@@ -7,8 +7,16 @@ from jsonschema import validate
 import cherrypy
 from cherrypy import HTTPError
 from peewee import DoesNotExist
+from six import PY2
 from pacifica.notifications import orm
 from pacifica.notifications.config import get_config
+
+
+def encode_text(thing_obj):
+    """Encode the text to bytes."""
+    if PY2:  # pramga: no cover only for python 2
+        return str(thing_obj)
+    return bytes(thing_obj, 'utf8')
 
 
 def get_remote_user():
@@ -37,6 +45,7 @@ class EventMatch(object):
     @staticmethod
     def _http_get(event_uuid):
         """Internal get event by UUID and return peewee obj."""
+        cherrypy.response.headers['Content-Type'] = 'application/json'
         orm.EventMatch.connect()
         try:
             event_obj = orm.EventMatch.get(
@@ -54,12 +63,13 @@ class EventMatch(object):
         if event_uuid:
             objs = cls._http_get(event_uuid).to_hash()
         else:
+            cherrypy.response.headers['Content-Type'] = 'application/json'
             orm.EventMatch.connect()
             objs = [x.to_hash() for x in orm.EventMatch.select().where(
                 orm.EventMatch.user == get_remote_user())]
             orm.EventMatch.close()
         if objs:
-            return bytes(dumps(objs), 'utf8')
+            return encode_text(dumps(objs))
         raise HTTPError(403, 'Forbidden')
 
     @classmethod
