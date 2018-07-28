@@ -5,7 +5,7 @@ from uuid import UUID
 from json import dumps, loads
 from jsonschema import validate
 import cherrypy
-from cherrypy import HTTPError, tools
+from cherrypy import HTTPError
 from peewee import DoesNotExist
 from pacifica.notifications import orm
 from pacifica.notifications.config import get_config
@@ -63,7 +63,6 @@ class EventMatch(object):
         raise HTTPError(403, 'Forbidden')
 
     @classmethod
-    @tools.json_in()
     # pylint: disable=invalid-name
     def PUT(cls, event_uuid):
         """Update an Event Match obj in the database."""
@@ -81,7 +80,6 @@ class EventMatch(object):
         return cls.GET(str(event_obj.uuid))
 
     @classmethod
-    @tools.json_in()
     # pylint: disable=invalid-name
     def POST(cls):
         """Create an Event Match obj in the database."""

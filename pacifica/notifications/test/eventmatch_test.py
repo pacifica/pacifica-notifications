@@ -113,9 +113,21 @@ class EventMatchCPTest(helper.CPWebCase):
     def test_not_found(self):
         """Test the delete method in EventMatch."""
         resp = requests.get(
-            '{}/eventmatch/1234'.format(self.url)
+            '{}/eventmatch/6cf47199-5abf-4ae3-a40d-9d6283d0ee21'.format(
+                self.url)
         )
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.status_code, 403)
         self.assertTrue('Content-Type' in resp.headers)
         self.assertEqual(resp.headers['Content-Type'], 'application/json')
-        self.assertEqual(resp.json()['status'], '404 Not Found')
+        self.assertEqual(resp.json()['status'], '403 Forbidden')
+
+    @eventmatch_droptables
+    def test_bad_uuid(self):
+        """Test the get with bad UUID."""
+        resp = requests.get(
+            '{}/eventmatch/1234'.format(self.url)
+        )
+        self.assertEqual(resp.status_code, 500)
+        self.assertTrue('Content-Type' in resp.headers)
+        self.assertEqual(resp.headers['Content-Type'], 'application/json')
+        self.assertEqual(resp.json()['status'], '500 Internal Server Error')
