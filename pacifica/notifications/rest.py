@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """CherryPy module containing classes for rest interface."""
 from uuid import UUID
+from datetime import datetime
 from json import dumps, loads
 from jsonschema import validate
 import cherrypy
@@ -10,6 +11,7 @@ from peewee import DoesNotExist
 from six import PY2
 from pacifica.notifications import orm
 from pacifica.notifications.config import get_config
+from pacifica.notifications.tasks import dispatch_event
 
 
 def encode_text(thing_obj):
@@ -54,7 +56,7 @@ class EventMatch(object):
             orm.EventMatch.close()
             raise HTTPError(403, 'Forbidden')
         orm.EventMatch.close()
-        if event_obj.user != get_remote_user():
+        if event_obj.user != get_remote_user() or event_obj.deleted:
             raise HTTPError(403, 'Forbidden')
         return event_obj
 
@@ -68,7 +70,9 @@ class EventMatch(object):
             cherrypy.response.headers['Content-Type'] = 'application/json'
             orm.EventMatch.connect()
             objs = [x.to_hash() for x in orm.EventMatch.select().where(
-                orm.EventMatch.user == get_remote_user())]
+                (orm.EventMatch.user == get_remote_user()) &
+                (orm.EventMatch.deleted is None)
+            )]
             orm.EventMatch.close()
         if objs:
             return encode_text(dumps(objs))
@@ -85,7 +89,8 @@ class EventMatch(object):
             setattr(event_obj, key, value)
         event_obj.validate_jsonpath()
         orm.EventMatch.connect()
-        event_obj.save()
+        with orm.EventMatch.atomic():
+            event_obj.save()
         orm.EventMatch.close()
         return cls.GET(str(event_obj.uuid))
 
@@ -97,9 +102,9 @@ class EventMatch(object):
         event_match_obj = loads(cherrypy.request.body.read().decode('utf8'))
         validate(event_match_obj, cls.json_post_schema)
         event_match_obj['user'] = get_remote_user()
+        event_obj = orm.EventMatch(**event_match_obj)
+        event_obj.validate_jsonpath()
         with orm.EventMatch.atomic():
-            event_obj = orm.EventMatch(**event_match_obj)
-            event_obj.validate_jsonpath()
             event_obj.save(force_insert=True)
         orm.EventMatch.close()
         return cls.GET(str(event_obj.uuid))
@@ -110,8 +115,27 @@ class EventMatch(object):
         """Delete the event by uuid."""
         event_obj = cls._http_get(event_uuid)
         orm.EventMatch.connect()
-        event_obj.delete_instance()
+        event_obj.deleted = datetime.now()
+        with orm.EventMatch.atomic():
+            event_obj.save()
         orm.EventMatch.close()
+
+
+# pylint: disable=too-few-public-methods
+class ReceiveEvent(object):
+    """CherryPy Receive Event object."""
+
+    exposed = True
+    event_json_schema = {}
+
+    @classmethod
+    # pylint: disable=invalid-name
+    def POST(cls):
+        """Receive the event and dispatch it to backend."""
+        event_obj = loads(cherrypy.request.body.read().decode('utf8'))
+        validate(event_obj, cls.event_json_schema)
+        print(type(dispatch_event.delay(event_obj)))
+# pylint: enable=too-few-public-methods
 
 
 # pylint: disable=too-few-public-methods
@@ -120,4 +144,5 @@ class Root(object):
 
     exposed = True
     eventmatch = EventMatch()
+    receive = ReceiveEvent()
 # pylint: enable=too-few-public-methods
