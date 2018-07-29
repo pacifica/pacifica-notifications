@@ -21,8 +21,8 @@ def dispatch_event(event_obj):
     """Get all the events and see which match."""
     EventMatch.connect()
     eventmatch_objs = EventMatch.select().where(
-        (EventMatch.deleted is None) &
-        (EventMatch.disabled is None)
+        (EventMatch.deleted >> None) &
+        (EventMatch.disabled >> None)
     )
     EventMatch.close()
     for eventmatch in eventmatch_objs:

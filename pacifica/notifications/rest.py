@@ -71,7 +71,7 @@ class EventMatch(object):
             orm.EventMatch.connect()
             objs = [x.to_hash() for x in orm.EventMatch.select().where(
                 (orm.EventMatch.user == get_remote_user()) &
-                (orm.EventMatch.deleted is None)
+                (orm.EventMatch.deleted >> None)
             )]
             orm.EventMatch.close()
         if objs:
