@@ -66,7 +66,7 @@ def query_policy(eventmatch, event_obj):
 def route_event(eventmatch, event_obj):
     """Route the event to the target url."""
     resp = requests.post(
-        eventmatch.target_url,
+        eventmatch['target_url'],
         data=dumps(event_obj),
         headers={'Content-Type': 'application/cloudevents+json'}
     )
