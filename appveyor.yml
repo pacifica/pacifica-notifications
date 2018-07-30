@@ -52,7 +52,7 @@ test_script:
 - ps: >
     mkdir C:\tmp; C:\pacifica\Scripts\activate.ps1;
     pre-commit run -a;
-    $celery_proc = Start-Process $env:PYTHON\python.exe -ArgumentList "-m coverage run --include=pacifica/* -p -m celery -A pacifica.notifications.tasks worker -l info -P eventlet" -RedirectStandardError celery-error.log -RedirectStandardOutput celery-output.log;
+    $celery_proc = Start-Process C:\pacifica\Scripts\coverage.exe -ArgumentList "run --include=pacifica/* -p -m celery -A pacifica.notifications.tasks worker -l info -P eventlet" -RedirectStandardError celery-error.log -RedirectStandardOutput celery-output.log;
     coverage run --include='pacifica/*' -p -m pytest -v;
     Get-Content celery-error.log; Get-Content celery-output.log;
     python -m celery -A pacifica.notifications.tasks control shutdown;
