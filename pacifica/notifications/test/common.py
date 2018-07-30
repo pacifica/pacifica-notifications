@@ -5,11 +5,8 @@ from json import dumps
 import requests
 import cherrypy
 from cherrypy.test import helper
-from pacifica.notifications.tasks import CELERY_APP
 from pacifica.notifications.orm import database_setup, EventMatch
 from pacifica.notifications.rest import Root, error_page_default
-
-CELERY_APP.conf.CELERY_ALWAYS_EAGER = True
 
 
 def eventmatch_droptables(func):
