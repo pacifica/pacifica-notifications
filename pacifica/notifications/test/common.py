@@ -37,6 +37,7 @@ class NotificationsCPTest(helper.CPWebCase):
     def _create_eventmatch(self, **kwargs):
         """Create a test eventmatch and return resp."""
         local_headers = kwargs.get('headers', {})
+        local_headers.update(self.headers)
         return requests.post(
             '{}/eventmatch'.format(self.url),
             data=dumps({
@@ -44,5 +45,5 @@ class NotificationsCPTest(helper.CPWebCase):
                 'jsonpath': 'data[?(@.key=Taggy & @.value=Blah)].value',
                 'target_url': 'http://127.0.0.1:8080'
             }),
-            headers=local_headers.update(self.headers)
+            headers=local_headers
         )

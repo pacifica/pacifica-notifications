@@ -107,6 +107,16 @@ class EventMatchCPTest(NotificationsCPTest):
         self.assertEqual(resp.json()['status'], '403 Forbidden')
 
     @eventmatch_droptables
+    def test_setting_alternate_user(self):
+        """Test the create POST method in EventMatch."""
+        resp = self._create_eventmatch(
+            headers={'Http-Remote-User': 'dmlb2001'})
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue('Content-Type' in resp.headers)
+        self.assertEqual(resp.headers['Content-Type'], 'application/json')
+        self.assertEqual(resp.json()['user'], 'dmlb2001')
+
+    @eventmatch_droptables
     def test_update_wrong_user(self):
         """Test the create POST method in EventMatch."""
         resp = self._create_eventmatch()
