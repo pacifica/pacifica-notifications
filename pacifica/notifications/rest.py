@@ -53,6 +53,8 @@ class EventMatch(object):
                     'disabled': {'type': ['string', 'null'], 'format': 'date-time'},
                     'error': {'type': ['string', 'null']},
                     'target_url': {'type': 'string'},
+                    'version': {'type': 'string'},
+                    'extensions': {'type': 'object'},
                     'created': {'type': 'string', 'format': 'date-time'},
                     'updated': {'type': 'string', 'format': 'date-time'},
                     'deleted': {'type': ['string', 'null'], 'format': 'date-time'}
@@ -60,7 +62,7 @@ class EventMatch(object):
             }
         },
         '$ref': '#/definitions/eventmatch',
-        'not': {'required': ['uuid', 'user', 'created', 'updated', 'deleted']}
+        'not': {'required': ['uuid', 'user', 'created', 'updated', 'deleted', 'version']}
     }
 
     @staticmethod
@@ -104,6 +106,7 @@ class EventMatch(object):
         event_obj = cls._http_get(event_uuid)
         json_obj = loads(cherrypy.request.body.read().decode('utf8'))
         validate(json_obj, cls.json_schema)
+        json_obj['extensions'] = dumps(json_obj.get('extensions', {}))
         for key, value in json_obj.items():
             setattr(event_obj, key, value)
         event_obj.updated = datetime.now()
@@ -121,6 +124,8 @@ class EventMatch(object):
         orm.EventMatch.connect()
         event_match_obj = loads(cherrypy.request.body.read().decode('utf8'))
         validate(event_match_obj, cls.json_schema)
+        event_match_obj['extensions'] = dumps(
+            event_match_obj.get('extensions', {}))
         event_match_obj['user'] = get_remote_user()
         event_obj = orm.EventMatch(**event_match_obj)
         event_obj.validate_jsonpath()

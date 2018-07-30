@@ -55,7 +55,7 @@ def query_policy(eventmatch, event_obj):
     )
     resp_major = int(resp.status_code)/100
     if resp_major == 5:
-        disable_eventmatch(eventmatch['uuid'], resp.body.read())
+        disable_eventmatch(eventmatch['uuid'], resp.text)
     if resp_major == 4:
         return
     if resp_major == 2:
