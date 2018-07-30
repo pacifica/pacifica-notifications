@@ -20,7 +20,7 @@ class CeleryCPTest(NotificationsCPTest):
         resp = requests.post(
             '{}/receive'.format(self.url),
             data=dumps(event_obj),
-            headers={'Content-Type: application/cloudevents+json; charset=utf-8'}
+            headers={'Content-Type': 'application/cloudevents+json; charset=utf-8'}
         )
         self.assertEqual(resp.status_code, 200)
         eventmatch_obj = EventMatch.get(
