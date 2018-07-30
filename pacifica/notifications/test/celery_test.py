@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Test the example module."""
 from os.path import join
+from time import sleep
 from json import loads, dumps
 import requests
 from pacifica.notifications.orm import EventMatch
@@ -23,6 +24,7 @@ class CeleryCPTest(NotificationsCPTest):
             headers={'Content-Type': 'application/cloudevents+json; charset=utf-8'}
         )
         self.assertEqual(resp.status_code, 200)
+        sleep(20)
         eventmatch_obj = EventMatch.get(
             EventMatch.uuid == eventmatch_obj['uuid'])
         self.assertEqual(eventmatch_obj.disabled, None)
