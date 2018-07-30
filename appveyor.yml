@@ -36,6 +36,7 @@ before_test:
     Invoke-WebRequest https://github.com/pacifica/pacifica-metadata/archive/master.zip -OutFile pacifica-metadata.zip;
     Expand-Archive pacifica-metadata.zip -DestinationPath C:\pacifica-metadata;
     Get-Content travis\metadata\error.log;
+    sleep 60;
     Invoke-WebRequest http://localhost:8121/users;
     pushd C:\pacifica-metadata\pacifica-metadata-master;
     python -m test_files.loadit;
