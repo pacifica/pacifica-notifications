@@ -35,7 +35,6 @@ before_test:
     Start-Process $env:PYTHON\python.exe -ArgumentList "test_files\cherrypy_catch.py";
     Invoke-WebRequest https://github.com/pacifica/pacifica-metadata/archive/master.zip -OutFile pacifica-metadata.zip;
     Expand-Archive pacifica-metadata.zip -DestinationPath C:\pacifica-metadata;
-    sleep 30;
     Invoke-WebRequest http://localhost:8121/users;
     pushd C:\pacifica-metadata\pacifica-metadata-master;
     python -m test_files.loadit;
