@@ -32,7 +32,7 @@ jobs:
   - python: 2.7
     script: pre-commit run -a
 
-before_install: travis/before-install.sh
+before_install: bash -xe travis/before-install.sh
 
 install:
 - pip install -r requirements-dev.txt
