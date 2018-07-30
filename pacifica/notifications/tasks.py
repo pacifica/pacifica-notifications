@@ -45,7 +45,10 @@ def disable_eventmatch(eventmatch, error):
 def query_policy(eventmatch, event_obj):
     """Query policy server to see if the event should be routed."""
     resp = requests.post(
-        '{}/events'.format(getenv('POLICY_URL', 'http://127.0.0.1:8181')),
+        '{}/events/{}'.format(
+            getenv('POLICY_URL', 'http://127.0.0.1:8181'),
+            eventmatch.user
+        ),
         data=dumps(event_obj),
         headers={'Content-Type', 'application/cloudevents+json'}
     )

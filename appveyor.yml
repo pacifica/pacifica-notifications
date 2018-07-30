@@ -2,23 +2,49 @@ version: 0.1.{build}
 pull_requests:
   do_not_increment_build_number: true
 
+services:
+- postgresql
+
 environment:
+  PGUSER: postgres
+  PGPASSWORD: Password12!
+  PGSQL_PATH: C:\Program Files\PostgreSQL\9.6
+  POSTGRES_ENV_POSTGRES_USER: postgres
+  POSTGRES_ENV_POSTGRES_PASSWORD: Password12!
+  BROKER_URL: redis://127.0.0.1:6379/0
+  BACKEND_URL: redis://127.0.0.1:6379/0
   matrix:
-    - PYTHON: C:\Python27-x64
-    - PYTHON: C:\Python36-x64
+  - PYTHON: C:\Python27-x64
+  - PYTHON: C:\Python36-x64
 
 install:
-  - ps: >
-      & "$env:PYTHON\python.exe" -m virtualenv C:\pacifica;
-      C:\pacifica\Scripts\activate.ps1;
-      python -m pip install --upgrade pip setuptools wheel;
-      python -m pip install -r requirements-dev.txt
+- ps: >
+    & "$env:PYTHON\python.exe" -m virtualenv C:\pacifica;
+    Invoke-WebRequest -Uri "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.6.5.zip" -OutFile "elasticsearch.zip";
+    Expand-Archive "elasticsearch.zip" -DestinationPath "C:\elasticsearch";
+    Start-Process C:\elasticsearch\elasticsearch-5.6.5\bin\elasticsearch;
+    C:\pacifica\Scripts\activate.ps1;
+    python -m pip install --upgrade pip setuptools wheel;
+    python -m pip install -r requirements-dev.txt;
 
 build: off
 
+before_test:
+- ps: >
+    $env:PATH = "${env:PGSQL_PATH}\bin;${env:PYTHON}\Scripts;${env:PATH}";
+    Start-Process $env:PYTHON\python.exe -ArgumentList "$env:PYTHON\scripts\MetadataServer.py" -WorkingDirectory "travis\metadata";
+    Start-Process $env:PYTHON\python.exe -ArgumentList "test_files\cherrypy_catch.py";
+    Invoke-WebRequest https://github.com/pacifica/pacifica-metadata/archive/master.zip -OutFile pacifica-metadata.zip;
+    Expand-Archive pacifica-metadata.zip -DestinationPath C:\pacifica-metadata;
+    Invoke-WebRequest http://localhost:8121/users;
+    pushd C:\pacifica-metadata\pacifica-metadata-master;
+    python -m test_files.loadit;
+    popd;
+
+
 test_script:
-  - ps: >
-      mkdir C:\tmp; C:\pacifica\Scripts\activate.ps1;
-      pre-commit run -a;
-      coverage run --include='pacifica/*' -m pytest -v;
-      coverage report -m --fail-under=100;
+- ps: >
+    mkdir C:\tmp; C:\pacifica\Scripts\activate.ps1;
+    pre-commit run -a;
+    coverage run --include='pacifica/*' -m pytest -v;
+    coverage report -m --fail-under=100;

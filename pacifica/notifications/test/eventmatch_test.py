@@ -3,48 +3,11 @@
 """Test the example module."""
 from json import dumps
 import requests
-import cherrypy
-from cherrypy.test import helper
-from pacifica.notifications.orm import database_setup, EventMatch
-from pacifica.notifications.rest import Root, error_page_default
+from pacifica.notifications.test.common import NotificationsCPTest, eventmatch_droptables
 
 
-def eventmatch_droptables(func):
-    """Setup the database and drop it once done."""
-    def wrapper(*args, **kwargs):
-        """Create the database table."""
-        database_setup()
-        func(*args, **kwargs)
-        EventMatch.drop_table()
-    return wrapper
-
-
-class EventMatchCPTest(helper.CPWebCase):
+class EventMatchCPTest(NotificationsCPTest):
     """Test the EventMatch class."""
-
-    HOST = '127.0.0.1'
-    PORT = 8070
-    url = 'http://{0}:{1}'.format(HOST, PORT)
-    headers = {'content-type': 'application/json'}
-
-    @staticmethod
-    def setup_server():
-        """Bind tables to in memory db and start service."""
-        cherrypy.config.update({'error_page.default': error_page_default})
-        cherrypy.config.update('server.conf')
-        cherrypy.tree.mount(Root(), '/', 'server.conf')
-
-    def _create_eventmatch(self):
-        """Create a test eventmatch and return resp."""
-        return requests.post(
-            '{}/eventmatch'.format(self.url),
-            data=dumps({
-                'name': 'testevent',
-                'jsonpath': 'foo[*].bar',
-                'target_url': 'http://example.com/callback'
-            }),
-            headers=self.headers
-        )
 
     @eventmatch_droptables
     def test_create(self):

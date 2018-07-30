@@ -41,8 +41,27 @@ class EventMatch(object):
     """CherryPy EventMatch endpoint."""
 
     exposed = True
-    json_put_schema = {}
-    json_post_schema = {}
+    json_schema = {
+        'definitions': {
+            'eventmatch': {
+                'type': 'object',
+                'properties': {
+                    'uuid': {'type': 'string'},
+                    'name': {'type': 'string'},
+                    'jsonpath': {'type': 'string'},
+                    'user': {'type': 'string'},
+                    'disabled': {'type': ['string', 'null'], 'format': 'date-time'},
+                    'error': {'type': ['string', 'null']},
+                    'target_url': {'type': 'string'},
+                    'created': {'type': 'string', 'format': 'date-time'},
+                    'updated': {'type': 'string', 'format': 'date-time'},
+                    'deleted': {'type': ['string', 'null'], 'format': 'date-time'}
+                }
+            }
+        },
+        '$ref': '#/definitions/eventmatch',
+        'not': {'required': ['uuid', 'user', 'created', 'updated', 'deleted']}
+    }
 
     @staticmethod
     def _http_get(event_uuid):
@@ -84,9 +103,10 @@ class EventMatch(object):
         """Update an Event Match obj in the database."""
         event_obj = cls._http_get(event_uuid)
         json_obj = loads(cherrypy.request.body.read().decode('utf8'))
-        validate(json_obj, cls.json_put_schema)
+        validate(json_obj, cls.json_schema)
         for key, value in json_obj.items():
             setattr(event_obj, key, value)
+        event_obj.updated = datetime.now()
         event_obj.validate_jsonpath()
         orm.EventMatch.connect()
         with orm.EventMatch.atomic():
@@ -100,7 +120,7 @@ class EventMatch(object):
         """Create an Event Match obj in the database."""
         orm.EventMatch.connect()
         event_match_obj = loads(cherrypy.request.body.read().decode('utf8'))
-        validate(event_match_obj, cls.json_post_schema)
+        validate(event_match_obj, cls.json_schema)
         event_match_obj['user'] = get_remote_user()
         event_obj = orm.EventMatch(**event_match_obj)
         event_obj.validate_jsonpath()
@@ -116,6 +136,7 @@ class EventMatch(object):
         event_obj = cls._http_get(event_uuid)
         orm.EventMatch.connect()
         event_obj.deleted = datetime.now()
+        event_obj.updated = datetime.now()
         with orm.EventMatch.atomic():
             event_obj.save()
         orm.EventMatch.close()
@@ -134,7 +155,7 @@ class ReceiveEvent(object):
         """Receive the event and dispatch it to backend."""
         event_obj = loads(cherrypy.request.body.read().decode('utf8'))
         validate(event_obj, cls.event_json_schema)
-        print(type(dispatch_event.delay(event_obj)))
+        return dispatch_event.delay(event_obj)
 # pylint: enable=too-few-public-methods
 
 

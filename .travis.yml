@@ -1,4 +1,16 @@
 language: python
+services:
+- postgresql
+- elasticsearch
+
+addons:
+  apt:
+    sources:
+    - elasticsearch-5.x
+    packages:
+    - elasticsearch
+    - oracle-java8-set-default
+
 python:
 - 2.7
 - 3.6
@@ -19,6 +31,8 @@ jobs:
     script: pre-commit run -a
   - python: 2.7
     script: pre-commit run -a
+
+before_install: travis/before-install.sh
 
 install:
 - pip install -r requirements-dev.txt
