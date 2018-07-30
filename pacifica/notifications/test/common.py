@@ -25,7 +25,10 @@ class NotificationsCPTest(helper.CPWebCase):
     HOST = '127.0.0.1'
     PORT = 8070
     url = 'http://{0}:{1}'.format(HOST, PORT)
-    headers = {'content-type': 'application/json'}
+    headers = {
+        'content-type': 'application/json',
+        'http-remote-user': 'dmlb2001'
+    }
 
     @staticmethod
     def setup_server():
