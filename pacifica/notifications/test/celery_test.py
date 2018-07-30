@@ -15,7 +15,8 @@ class CeleryCPTest(NotificationsCPTest):
     @eventmatch_droptables
     def test_create(self):
         """Test the create POST method in EventMatch."""
-        resp = self._create_eventmatch()
+        resp = self._create_eventmatch(
+            headers={'http-remote-user': 'dmlb2001'})
         eventmatch_obj = resp.json()
         event_obj = loads(open(join('test_files', 'events.json')).read())
         resp = requests.post(

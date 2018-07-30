@@ -25,10 +25,7 @@ class NotificationsCPTest(helper.CPWebCase):
     HOST = '127.0.0.1'
     PORT = 8070
     url = 'http://{0}:{1}'.format(HOST, PORT)
-    headers = {
-        'content-type': 'application/json',
-        'http-remote-user': 'dmlb2001'
-    }
+    headers = {'content-type': 'application/json'}
 
     @staticmethod
     def setup_server():
@@ -37,8 +34,9 @@ class NotificationsCPTest(helper.CPWebCase):
         cherrypy.config.update('server.conf')
         cherrypy.tree.mount(Root(), '/', 'server.conf')
 
-    def _create_eventmatch(self):
+    def _create_eventmatch(self, **kwargs):
         """Create a test eventmatch and return resp."""
+        local_headers = kwargs.get('headers', {})
         return requests.post(
             '{}/eventmatch'.format(self.url),
             data=dumps({
@@ -46,5 +44,5 @@ class NotificationsCPTest(helper.CPWebCase):
                 'jsonpath': 'data[?(@.key=Taggy & @.value=Blah)].value',
                 'target_url': 'http://127.0.0.1:8080'
             }),
-            headers=self.headers
+            headers=local_headers.update(self.headers)
         )
