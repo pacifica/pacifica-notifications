@@ -34,6 +34,7 @@ before_test:
     C:\pacifica\Scripts\activate.ps1;
     Start-Process C:\pacifica\Scripts\MetadataServer.exe -WorkingDirectory "travis\metadata" -RedirectStandardError metadata-error.log -RedirectStandardOutput metadata-output.log;
     Start-Process $env:PYTHON\python.exe -ArgumentList "test_files\cherrypy_catch.py";
+    Start-Process C:\pacifica\Scripts\PolicyServer.exe -WorkingDirectory "travis\policy" -RedirectStandardError policy-error.log -RedirectStandardOutput policy-output.log;
     Invoke-WebRequest https://github.com/pacifica/pacifica-metadata/archive/master.zip -OutFile pacifica-metadata.zip;
     Expand-Archive pacifica-metadata.zip -DestinationPath C:\pacifica-metadata;
     Invoke-WebRequest http://localhost:8121/users;
