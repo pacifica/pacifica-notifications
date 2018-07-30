@@ -28,15 +28,16 @@ def dispatch_event(event_obj):
     for eventmatch in eventmatch_objs:
         jsonpath_expr = parse(eventmatch.jsonpath)
         if jsonpath_expr.find(event_obj):
-            query_policy.delay(eventmatch, event_obj)
+            query_policy.delay(eventmatch.to_hash(), event_obj)
 
 
-def disable_eventmatch(eventmatch, error):
+def disable_eventmatch(eventmatch_uuid, error):
     """Disable the eventmatch obj."""
-    eventmatch.disabled = datetime.now()
-    eventmatch.error = error
     EventMatch.connect()
     with EventMatch.atomic():
+        eventmatch = EventMatch.get(EventMatch.uuid == eventmatch_uuid)
+        eventmatch.disabled = datetime.now()
+        eventmatch.error = error
         eventmatch.save()
     EventMatch.close()
 
@@ -47,14 +48,14 @@ def query_policy(eventmatch, event_obj):
     resp = requests.post(
         '{}/events/{}'.format(
             getenv('POLICY_URL', 'http://127.0.0.1:8181'),
-            eventmatch.user
+            eventmatch['user']
         ),
         data=dumps(event_obj),
         headers={'Content-Type', 'application/cloudevents+json'}
     )
     resp_major = int(resp.status_code)/100
     if resp_major == 5:
-        disable_eventmatch(eventmatch, resp.body.read())
+        disable_eventmatch(eventmatch['uuid'], resp.body.read())
     if resp_major == 4:
         return
     if resp_major == 2:
@@ -71,4 +72,4 @@ def route_event(eventmatch, event_obj):
     )
     resp_major = int(resp.status_code)/100
     if resp_major == 5 and resp_major == 4:
-        disable_eventmatch(eventmatch, resp.body.read())
+        disable_eventmatch(eventmatch['uuid'], resp.body.read())
