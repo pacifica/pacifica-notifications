@@ -51,7 +51,7 @@ def query_policy(eventmatch, event_obj):
             eventmatch['user']
         ),
         data=dumps(event_obj),
-        headers={'Content-Type': 'application/cloudevents+json'}
+        headers={'Content-Type': 'application/json'}
     )
     resp_major = int(resp.status_code)/100
     if resp_major == 5:
