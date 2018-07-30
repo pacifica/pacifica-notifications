@@ -30,6 +30,7 @@ build: off
 before_test:
 - ps: >
     $env:PATH = "${env:PGSQL_PATH}\bin;${env:PYTHON}\Scripts;${env:PATH}";
+    createdb pacifica_metadata;
     Start-Process $env:PYTHON\python.exe -ArgumentList "$env:PYTHON\scripts\MetadataServer.py" -WorkingDirectory "travis\metadata";
     Start-Process $env:PYTHON\python.exe -ArgumentList "test_files\cherrypy_catch.py";
     Invoke-WebRequest https://github.com/pacifica/pacifica-metadata/archive/master.zip -OutFile pacifica-metadata.zip;
