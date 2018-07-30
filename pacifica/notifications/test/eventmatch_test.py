@@ -115,7 +115,10 @@ class EventMatchCPTest(NotificationsCPTest):
             data=dumps({
                 'target_url': 'http://foo.example.com/1234'
             }),
-            headers={'Http-Remote-User': 'dmlb2001'}
+            headers={
+                'Http-Remote-User': 'dmlb2001',
+                'Content-Type': 'application/json'
+            }
         )
         self.assertEqual(resp.status_code, 403)
         self.assertTrue('Content-Type' in resp.headers)
@@ -129,7 +132,10 @@ class EventMatchCPTest(NotificationsCPTest):
         uuid = resp.json()['uuid']
         resp = requests.delete(
             '{}/eventmatch/{}'.format(self.url, uuid),
-            headers={'Http-Remote-User': 'dmlb2001'}
+            headers={
+                'Http-Remote-User': 'dmlb2001',
+                'Content-Type': 'application/json'
+            }
         )
         self.assertEqual(resp.status_code, 403)
         self.assertTrue('Content-Type' in resp.headers)
