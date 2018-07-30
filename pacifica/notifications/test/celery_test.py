@@ -18,6 +18,7 @@ class CeleryCPTest(NotificationsCPTest):
         resp = self._create_eventmatch(
             headers={'Http-Remote-User': 'dmlb2001'})
         eventmatch_obj = resp.json()
+        self.assertEqual(eventmatch_obj['user'], 'dmlb2001')
         event_obj = loads(open(join('test_files', 'events.json')).read())
         resp = requests.post(
             '{}/receive'.format(self.url),
