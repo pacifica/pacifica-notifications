@@ -155,7 +155,7 @@ class ReceiveEvent(object):
         """Receive the event and dispatch it to backend."""
         event_obj = loads(cherrypy.request.body.read().decode('utf8'))
         validate(event_obj, cls.event_json_schema)
-        return dispatch_event.delay(event_obj)
+        return str(dispatch_event.delay(event_obj))
 # pylint: enable=too-few-public-methods
 
 
