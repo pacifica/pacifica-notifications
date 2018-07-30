@@ -2,7 +2,7 @@ celery
 cherrypy
 codeclimate-test-reporter
 coverage>4.0,<4.4
-jsonpath-rw
+jsonpath-ng
 jsonschema
 -e git://github.com/pacifica/pacifica-metadata.git#egg=PacificaMetadata
 -e git://github.com/pacifica/pacifica-policy.git#egg=PacificaPolicy

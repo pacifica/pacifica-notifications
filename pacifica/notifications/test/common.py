@@ -43,7 +43,7 @@ class NotificationsCPTest(helper.CPWebCase):
             '{}/eventmatch'.format(self.url),
             data=dumps({
                 'name': 'testevent',
-                'jsonpath': 'foo[*].bar',
+                'jsonpath': 'data[?(@.key=Taggy & @.value=Blah)].value',
                 'target_url': 'http://127.0.0.1:8080'
             }),
             headers=self.headers

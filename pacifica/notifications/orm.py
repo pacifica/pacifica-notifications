@@ -3,7 +3,7 @@
 """The ORM module defining the SQL model for notifications."""
 import uuid
 from datetime import datetime
-from jsonpath_rw import parse
+from jsonpath_ng.ext import parse
 from peewee import Model, CharField, TextField, DateTimeField, UUIDField
 from playhouse.db_url import connect
 from pacifica.notifications.config import get_config

@@ -4,7 +4,7 @@
 from os import getenv
 from datetime import datetime
 from json import dumps
-from jsonpath_rw import parse
+from jsonpath_ng.ext import parse
 import requests
 from celery import Celery
 from pacifica.notifications.orm import EventMatch
