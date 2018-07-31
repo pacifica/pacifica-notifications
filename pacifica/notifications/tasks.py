@@ -54,7 +54,7 @@ def query_policy(eventmatch, event_obj):
         data=dumps(event_obj),
         headers={'Content-Type': 'application/json'}
     )
-    resp_major = int(resp.status_code)/100
+    resp_major = int(int(resp.status_code)/100)
     if resp_major == 5:
         disable_eventmatch(eventmatch['uuid'], resp.text)
     if resp_major == 4:
@@ -75,6 +75,6 @@ def route_event(eventmatch, event_obj):
     except RequestException as ex:
         disable_eventmatch(eventmatch['uuid'], str(ex))
         return
-    resp_major = int(resp.status_code)/100
+    resp_major = int(int(resp.status_code)/100)
     if resp_major == 5 or resp_major == 4:
         disable_eventmatch(eventmatch['uuid'], resp.text)
