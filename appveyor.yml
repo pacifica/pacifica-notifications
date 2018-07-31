@@ -35,7 +35,7 @@ before_test:
     createdb pacifica_metadata;
     C:\pacifica\Scripts\activate.ps1;
     Start-Process C:\pacifica\Scripts\MetadataServer.exe -WorkingDirectory "travis\metadata" -RedirectStandardError metadata-error.log -RedirectStandardOutput metadata-output.log;
-    Start-Process $env:PYTHON\python.exe -ArgumentList "test_files\cherrypy_catch.py" -RedirectStandardError catch-error.log -RedirectStandardOutput catch-output.log;
+    Start-Process C:\pacifica\Scripts\python.exe -ArgumentList "test_files\cherrypy_catch.py" -RedirectStandardError catch-error.log -RedirectStandardOutput catch-output.log;
     Invoke-WebRequest https://github.com/pacifica/pacifica-metadata/archive/master.zip -OutFile pacifica-metadata.zip;
     Expand-Archive pacifica-metadata.zip -DestinationPath C:\pacifica-metadata;
     nuget install redis-64 -excludeversion;
