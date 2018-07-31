@@ -6,6 +6,7 @@ from datetime import datetime
 from json import dumps
 from jsonpath_ng.ext import parse
 import requests
+from requests.exceptions import RequestException
 from celery import Celery
 from pacifica.notifications.orm import EventMatch
 
@@ -65,11 +66,15 @@ def query_policy(eventmatch, event_obj):
 @CELERY_APP.task
 def route_event(eventmatch, event_obj):
     """Route the event to the target url."""
-    resp = requests.post(
-        eventmatch['target_url'],
-        data=dumps(event_obj),
-        headers={'Content-Type': 'application/json'}
-    )
+    try:
+        resp = requests.post(
+            eventmatch['target_url'],
+            data=dumps(event_obj),
+            headers={'Content-Type': 'application/json'}
+        )
+    except RequestException as ex:
+        disable_eventmatch(eventmatch['uuid'], str(ex))
+        return
     resp_major = int(resp.status_code)/100
     if resp_major == 5 and resp_major == 4:
         disable_eventmatch(eventmatch['uuid'], resp.body.read())

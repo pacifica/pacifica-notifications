@@ -57,6 +57,5 @@ test_script:
     coverage run --include='pacifica/*' -p -m pytest -v;
     python -m celery -A pacifica.notifications.tasks control shutdown;
     $celery_proc | Wait-Process;
-    Get-Content catch-error.log; Get-Content catch-output.log;
     ls .coverage* | %{ python -m coverage combine -a $_.name };
     coverage report -m --fail-under=100;
