@@ -24,7 +24,7 @@ env:
   BROKER_URL: redis://localhost:6379/0
 
 script:
-- coverage run --include='pacifica/*' -p -m celery -A pacifica.notifications.tasks worker -l info &
+- coverage run --include='pacifica/*' -p -m celery -A pacifica.notifications.tasks worker -c 1 -P solo -l info &
 - coverage run --include='pacifica/*' -p -m pytest -v
 - celery -A pacifica.notifications.tasks control shutdown
 - coverage combine -a .coverage*
