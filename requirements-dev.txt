@@ -11,4 +11,5 @@ pep257
 pre-commit
 pylint<2.0
 pytest
+requests
 setuptools
