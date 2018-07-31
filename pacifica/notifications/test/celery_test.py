@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Test the example module."""
 from os.path import join
+from datetime import datetime
 from time import sleep
 from json import loads, dumps
 import requests
@@ -11,6 +12,29 @@ from pacifica.notifications.test.common import NotificationsCPTest, eventmatch_d
 
 class CeleryCPTest(NotificationsCPTest):
     """Test the EventMatch class."""
+
+    @eventmatch_droptables
+    def test_bad_url(self):
+        """Test the create POST method in EventMatch."""
+        resp = self._create_eventmatch(
+            headers={'Http-Remote-User': 'dmlb2001'},
+            json_data={'target_url': 'http://127.0.0.1:8192/something/no/where'}
+        )
+        eventmatch_obj = resp.json()
+        self.assertEqual(eventmatch_obj['user'], 'dmlb2001')
+        self.assertEqual(
+            eventmatch_obj['target_url'], 'http://127.0.0.1:8192/something/no/where')
+        event_obj = loads(open(join('test_files', 'events.json')).read())
+        resp = requests.post(
+            '{}/receive'.format(self.url),
+            data=dumps(event_obj),
+            headers={'Content-Type': 'application/cloudevents+json; charset=utf-8'}
+        )
+        self.assertEqual(resp.status_code, 200)
+        sleep(20)
+        eventmatch_obj = EventMatch.get(
+            EventMatch.uuid == eventmatch_obj['uuid'])
+        self.assertEqual(eventmatch_obj.disabled.year, datetime.now().year)
 
     @eventmatch_droptables
     def test_create(self):
