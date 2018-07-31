@@ -17,6 +17,12 @@ class CeleryCPTest(NotificationsCPTest):
     def test_bad_url(self):
         """Test the create POST method in EventMatch."""
         resp = self._create_eventmatch(
+            headers={'Http-Remote-User': 'bjohn'},
+            json_data={'target_url': 'http://127.0.0.1:8080/something/no/where'}
+        )
+        eventmatch_obj = resp.json()
+        self.assertEqual(eventmatch_obj['user'], 'bjohn')
+        resp = self._create_eventmatch(
             headers={'Http-Remote-User': 'dmlb2001'},
             json_data={'target_url': 'http://127.0.0.1:8080/something/no/where'}
         )
