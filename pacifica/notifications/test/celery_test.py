@@ -29,7 +29,6 @@ class CeleryCPTest(NotificationsCPTest):
         )
         eventmatch_obj = resp.json()
         self.assertEqual(eventmatch_obj['user'], 'bjohn')
-        uuid_list.append(eventmatch_obj['uuid'])
         resp = self._create_eventmatch(
             headers={'Http-Remote-User': 'dmlb2001'},
             json_data={'target_url': 'http://127.0.0.1:8080/something/no/where'}
