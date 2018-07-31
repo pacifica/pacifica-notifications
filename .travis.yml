@@ -26,7 +26,7 @@ env:
 script:
 - coverage run --include='pacifica/*' -p -m celery -A pacifica.notifications.tasks worker -c 1 -P solo -l info &
 - coverage run --include='pacifica/*' -p -m pytest -v
-- celery -A pacifica.notifications.tasks control shutdown
+- celery -A pacifica.notifications.tasks control shutdown || true
 - coverage combine -a .coverage*
 - coverage report -m --fail-under 100
 - if [[ $CODECLIMATE_REPO_TOKEN ]] ; then codeclimate-test-reporter; fi
