@@ -1,8 +1,15 @@
+celery
+cherrypy
 codeclimate-test-reporter
 coverage>4.0,<4.4
+jsonpath-ng
+jsonschema
+-e git://github.com/pacifica/pacifica-metadata.git#egg=PacificaMetadata
+-e git://github.com/pacifica/pacifica-policy.git#egg=PacificaPolicy
+peewee
 pep257
-pre-commit
 pre-commit
 pylint<2.0
 pytest
+requests
 setuptools

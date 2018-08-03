@@ -1,2 +1,8 @@
+celery
+cherrypy
+jsonpath-ng
+jsonschema
+peewee
+requests
 setuptools
 six

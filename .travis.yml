@@ -1,4 +1,17 @@
 language: python
+services:
+- postgresql
+- elasticsearch
+- redis-server
+
+addons:
+  apt:
+    sources:
+    - elasticsearch-5.x
+    packages:
+    - elasticsearch
+    - oracle-java8-set-default
+
 python:
 - 2.7
 - 3.6
@@ -7,8 +20,14 @@ stages:
 - lint
 - test
 
+env:
+  BROKER_URL: redis://localhost:6379/0
+
 script:
-- coverage run --include='pacifica/*' -m pytest -v
+- coverage run --include='pacifica/*' -p -m celery -A pacifica.notifications.tasks worker -c 1 -P solo -l info &
+- coverage run --include='pacifica/*' -p -m pytest -v
+- celery -A pacifica.notifications.tasks control shutdown || true
+- coverage combine -a .coverage*
 - coverage report -m --fail-under 100
 - if [[ $CODECLIMATE_REPO_TOKEN ]] ; then codeclimate-test-reporter; fi
 
@@ -20,5 +39,8 @@ jobs:
   - python: 2.7
     script: pre-commit run -a
 
+before_install: bash -xe travis/before-install.sh
+
 install:
 - pip install -r requirements-dev.txt
+- pip install 'celery[redis]'

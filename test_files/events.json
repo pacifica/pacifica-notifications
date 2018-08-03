@@ -1,0 +1,79 @@
+{
+  "cloudEventsVersion": "0.1",
+  "contentType": "application/json",
+  "data": [
+    {
+      "destinationTable": "Transactions._id",
+      "value": 1234
+    },
+    {
+      "destinationTable": "Transactions.submitter",
+      "value": 10
+    },
+    {
+      "destinationTable": "Transactions.proposal",
+      "value": "1236\u00e9"
+    },
+    {
+      "destinationTable": "Transactions.instrument",
+      "value": 54
+    },
+    {
+      "destinationTable": "TransactionKeyValue",
+      "key": "Tag",
+      "value": "Nam\\u00e9"
+    },
+    {
+      "destinationTable": "TransactionKeyValue",
+      "key": "Taggy",
+      "value": "Blah"
+    },
+    {
+      "destinationTable": "TransactionKeyValue",
+      "key": "Taggier",
+      "value": "Blah"
+    },
+    {
+      "_id": 34,
+      "ctime": "Tue Nov 29 14:09:05 PST 2016",
+      "destinationTable": "Files",
+      "hashsum": "f1d2d2f924e986ac86fdf7b36c94bcdf32beec15",
+      "hashtype": "sha1",
+      "mimetype": "text/plain",
+      "mtime": "Tue Nov 29 14:09:05 PST 2016",
+      "name": "foo.txt",
+      "size": 128,
+      "subdir": "a/b/"
+    },
+    {
+      "_id": 35,
+      "ctime": "Tue Nov 29 14:09:05 PST 2016",
+      "destinationTable": "Files",
+      "hashsum": "f1d2d2f924e986ac86fdf7b36c94bcdf32beec15",
+      "hashtype": "sha1",
+      "mimetype": "text/plain",
+      "mtime": "Tue Nov 29 14:09:05 PST 2016",
+      "name": "bar.txt",
+      "size": 47,
+      "subdir": "a/b/"
+    },
+    {
+      "ctime": "Tue Nov 29 14:09:05 PST 2016",
+      "destinationTable": "Files",
+      "hashsum": "f1d2d2f924e986ac86fdf7b36c94bcdf32beec15",
+      "hashtype": "sha1",
+      "mimetype": "text/plain",
+      "mtime": "Tue Nov 29 14:09:05 PST 2016",
+      "name": "\u30d1\u30bd\u30b3\u30f3\u8cc7\u7523\u7ba1\u7406\u53f0\u5e33\uff08S&T HK\uff09_\u73fe\u5730\u8abf\u9054PC.xls",
+      "size": 4,
+      "subdir": "data/a/c"
+    }
+  ],
+  "eventID": "C234-1234-1234",
+  "eventTime": "2018-04-05T17:31:00Z",
+  "eventType": "org.pacifica.metadata.ingest",
+  "extensions": {
+    "comExampleExtension": "value"
+  },
+  "source": "/pacifica/metadata/ingest"
+}
