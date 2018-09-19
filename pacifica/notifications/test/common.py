@@ -40,7 +40,7 @@ class NotificationsCPTest(helper.CPWebCase):
         local_headers.update(self.headers)
         local_data = {
             'name': 'testevent',
-            'jsonpath': 'data[?(@.key=Taggy & @.value=Blah)].value',
+            'jsonpath': '$.data[?(@.value="Blah")].value',
             'target_url': 'http://127.0.0.1:8080'
         }
         local_data.update(kwargs.get('json_data', {}))

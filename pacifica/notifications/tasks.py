@@ -4,11 +4,11 @@
 from os import getenv
 from datetime import datetime
 from json import dumps
-from jsonpath_ng.ext import parse
 import requests
 from requests.exceptions import RequestException
 from celery import Celery
 from pacifica.notifications.orm import EventMatch
+from pacifica.notifications.jsonpath import parse, find
 
 CELERY_APP = Celery(
     'notifications',
@@ -28,7 +28,7 @@ def dispatch_event(event_obj):
     EventMatch.close()
     for eventmatch in eventmatch_objs:
         jsonpath_expr = parse(eventmatch.jsonpath)
-        if jsonpath_expr.find(event_obj):
+        if find(jsonpath_expr, event_obj):
             query_policy.delay(eventmatch.to_hash(), event_obj)
 
 

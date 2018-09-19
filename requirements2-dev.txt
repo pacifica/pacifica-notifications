@@ -1,4 +1,4 @@
--r requirements.txt
+-r requirements2.txt
 codeclimate-test-reporter
 coverage>4.0,<4.4
 -e git://github.com/pacifica/pacifica-metadata.git#egg=PacificaMetadata

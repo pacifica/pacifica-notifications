@@ -1,5 +1,9 @@
 #!/bin/bash -xe
-pip install -r requirements-dev.txt
+if python -V 2>&1 | grep 'Python 2' ; then
+  pip install -r requirements2-dev.txt
+else
+  pip install -r requirements-dev.txt
+fi
 psql -c 'create database pacifica_metadata;' -U postgres
 export POSTGRES_ENV_POSTGRES_USER=postgres
 export POSTGRES_ENV_POSTGRES_PASSWORD=

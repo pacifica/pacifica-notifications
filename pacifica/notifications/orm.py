@@ -4,10 +4,10 @@
 import uuid
 from datetime import datetime
 from json import loads
-from jsonpath_ng.ext import parse
 from peewee import Model, CharField, TextField, DateTimeField, UUIDField
 from playhouse.db_url import connect
 from pacifica.notifications.config import get_config
+from pacifica.notifications.jsonpath import parse
 
 DB = connect(get_config().get('database', 'peewee_url'))
 
