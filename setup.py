@@ -23,7 +23,7 @@ setup(
     namespace_packages=['pacifica'],
     entry_points={
         'console_scripts': [
-            'pacifica-notifications=pacifica.notifications:main'
+            'pacifica-notifications=pacifica.notifications.__main__:main'
         ]
     },
     install_requires=[str(ir.req) for ir in INSTALL_REQS]
