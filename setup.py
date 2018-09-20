@@ -6,9 +6,11 @@ try:  # pip version 9
 except ImportError:
     from pip._internal.req import parse_requirements
 from setuptools import setup, find_packages
+from six import PY2
 
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
-INSTALL_REQS = parse_requirements('requirements.txt', session='hack')
+REQ_FILE = 'requirements2.txt' if PY2 else 'requirements.txt'
+INSTALL_REQS = parse_requirements(REQ_FILE, session='hack')
 
 setup(
     name='pacifica-notifications',
