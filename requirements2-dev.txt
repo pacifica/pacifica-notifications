@@ -1,6 +1,7 @@
 -r requirements2.txt
 codeclimate-test-reporter
 coverage>4.0,<4.4
+mock
 -e git://github.com/pacifica/pacifica-metadata.git#egg=PacificaMetadata
 -e git://github.com/pacifica/pacifica-policy.git#egg=PacificaPolicy
 pep257
