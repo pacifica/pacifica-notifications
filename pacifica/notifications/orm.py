@@ -2,19 +2,32 @@
 # -*- coding: utf-8 -*-
 """The ORM module defining the SQL model for notifications."""
 import uuid
+from time import sleep
 from datetime import datetime
 from json import loads
-from peewee import Model, CharField, TextField, DateTimeField, UUIDField
+from peewee import Model, CharField, TextField, DateTimeField, UUIDField, OperationalError
 from playhouse.db_url import connect
 from pacifica.notifications.config import get_config
 from pacifica.notifications.jsonpath import parse
 
+DATABASE_CONNECT_ATTEMPTS = 20
+DATABASE_WAIT = 5
 DB = connect(get_config().get('database', 'peewee_url'))
 
 
-def database_setup():
+def database_setup(attempts=0):
     """Setup the database."""
-    EventMatch.database_setup()
+    try:
+        EventMatch.connect()
+        EventMatch.database_setup()
+        EventMatch.close()
+    except OperationalError:
+        if attempts < DATABASE_CONNECT_ATTEMPTS:
+            sleep(DATABASE_WAIT)
+            attempts += 1
+            database_setup(attempts)
+        else:
+            raise OperationalError
 
 
 class EventMatch(Model):
