@@ -88,7 +88,7 @@ class EventMatch(Model):
             ret_obj[field_name] = getattr(self, field_name)
         ret_obj['uuid'] = str(ret_obj['uuid'])
         ret_obj['extensions'] = loads(ret_obj['extensions'])
-        for dt_element in ['deleted', 'updated', 'created']:
+        for dt_element in ['disabled', 'deleted', 'updated', 'created']:
             if getattr(self, dt_element):
                 # pylint: disable=no-member
                 ret_obj[dt_element] = getattr(self, dt_element).isoformat()
