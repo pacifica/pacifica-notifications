@@ -3,7 +3,6 @@ services:
 - postgresql
 - elasticsearch
 - redis-server
-
 addons:
   apt:
     sources:
@@ -11,26 +10,43 @@ addons:
     packages:
     - elasticsearch
     - oracle-java8-set-default
-
-python:
-- 2.7
-- 3.6
-
 stages:
 - lint
 - test
-
+- deploy
 env:
   BROKER_URL: redis://localhost:6379/0
-
-script:
-- coverage run --include='pacifica/*' -p -m celery -A pacifica.notifications.tasks worker -c 1 -P solo -l info &
-- coverage run --include='pacifica/*' -p -m pytest -v
+".script": &1
+- pip install .
+- export NOTIFICATIONS_CPCONFIG="$PWD/server.conf"
+- cd tests
+- coverage run --include='*/site-packages/pacifica/notifications/*' -p -m celery -A
+  pacifica.notifications.tasks worker -c 1 -P solo -l info &
+- coverage run --include='*/site-packages/pacifica/notifications/*' -p -m pytest -v
 - celery -A pacifica.notifications.tasks control shutdown || true
 - coverage combine -a .coverage*
 - coverage report -m --fail-under 100
-- if [[ $CODECLIMATE_REPO_TOKEN ]] ; then codeclimate-test-reporter; fi
-
+".before_script": &2
+- psql -c 'create database pacifica_metadata;' -U postgres
+- export POSTGRES_ENV_POSTGRES_USER=postgres
+- export POSTGRES_ENV_POSTGRES_PASSWORD=
+- pushd travis/metadata; MetadataServer.py & echo $! > metadata.pid; popd;
+- |
+  MAX_TRIES=60 HTTP_CODE=$(curl -sL -w "%{http_code}\\n" localhost:8121/keys -o /dev/null || true);
+  while [[ $HTTP_CODE != 200 && $MAX_TRIES > 0 ]] ; do
+    sleep 1;
+    HTTP_CODE=$(curl -sL -w "%{http_code}\\n" localhost:8121/keys -o /dev/null || true);
+    MAX_TRIES=$(( MAX_TRIES - 1 ));
+  done;
+- |
+  TOP_DIR=$PWD MD_TEMP=$(mktemp -d);
+  git clone https://github.com/pacifica/pacifica-metadata.git ${MD_TEMP};
+  pushd ${MD_TEMP};
+  python test_files/loadit.py;
+  popd;
+  rm -rf ${MD_TEMP};
+- pushd travis/policy; PolicyServer.py & echo $! > PolicyServer.pid; popd;
+- pushd tests; python cherrypy_catch_test.py & echo $! > cherrypy-catch.pid; popd;
 jobs:
   include:
   - stage: lint
@@ -38,14 +54,47 @@ jobs:
     script: pre-commit run -a
   - python: 2.7
     script: pre-commit run -a
-
-before_install: bash -xe travis/before-install.sh
-
+  - stage: test
+    script: *1
+    before_script: *2
+    python: 3.6
+  - script: *1
+    before_script: *2
+    python: 2.7
+  - stage: deploy
+    services: []
+    language: python
+    before_install: skip
+    script: skip
+    python: 3.6
+    deploy:
+      skip_cleanup: true
+      provider: pypi
+      user: dmlb2000
+      distributions: sdist bdist_wheel
+      password:
+        secure: unZRE1y5YPkan51bctexTG/KeVVe0deRKzg05sLNFTFzNPPxooOWDStb3AAKfzDl8+cGQmOyWDzQauDXlMUg9g3RPjmSKs5AzxxieP3VAg/gMuw/c5NyGgqcYjW+42ZzLf+xzpbbWddfyaqugvHJCm2MxN3XxC9SpejG3EqpQm2E7DTVq78R6tNrUe/tFybiO92ti6DDF7AZnfNdJkDMUm6mpZuIywyr3RJUv2hixllnUXHNFtbieLKubeSwLd6lXROA39GRUPz1/VrVJ8bFkP9iUufuBcxyAxI12MbFPt8JcVfFnQJaNkHRb+0YAY/Y+nSf21ix9jUNUB9TrbzKj0xAt8iuGt69E+r+idWzg7ruft9zVAOMzR2rJOUOLx6YZY+P430domlZMV2CzZYU265gbseq1sls2DLZwpbDWUo7ANfILEq6phj1h0W17+vlnLzuBufjj9oHWZNLoQnPITsuH0ZBjcmagC3Ck7HvfE8J9DbxWNu+XzNsb9dZRxykzAo65zj5uB/AfQ9h0KGqwYbKvih40RL3d0Xec3D3DjdFkH0n8cAGNhvptAvlfTWIoTD20xqWu0j48hv5882Gi1gVFT8kIqDLOYGbk45bBfj9j9zxdWsHGahQMYJH9ct/4IqE9ftq1PycMOLLAcq14IK7bMJIlyeATVjlmFfv8FM=
+      on:
+        tags: true
+  - services: []
+    language: python
+    before_install: skip
+    script: skip
+    python: 2.7
+    deploy:
+      skip_cleanup: true
+      provider: pypi
+      user: dmlb2000
+      distributions: bdist_wheel
+      password:
+        secure: unZRE1y5YPkan51bctexTG/KeVVe0deRKzg05sLNFTFzNPPxooOWDStb3AAKfzDl8+cGQmOyWDzQauDXlMUg9g3RPjmSKs5AzxxieP3VAg/gMuw/c5NyGgqcYjW+42ZzLf+xzpbbWddfyaqugvHJCm2MxN3XxC9SpejG3EqpQm2E7DTVq78R6tNrUe/tFybiO92ti6DDF7AZnfNdJkDMUm6mpZuIywyr3RJUv2hixllnUXHNFtbieLKubeSwLd6lXROA39GRUPz1/VrVJ8bFkP9iUufuBcxyAxI12MbFPt8JcVfFnQJaNkHRb+0YAY/Y+nSf21ix9jUNUB9TrbzKj0xAt8iuGt69E+r+idWzg7ruft9zVAOMzR2rJOUOLx6YZY+P430domlZMV2CzZYU265gbseq1sls2DLZwpbDWUo7ANfILEq6phj1h0W17+vlnLzuBufjj9oHWZNLoQnPITsuH0ZBjcmagC3Ck7HvfE8J9DbxWNu+XzNsb9dZRxykzAo65zj5uB/AfQ9h0KGqwYbKvih40RL3d0Xec3D3DjdFkH0n8cAGNhvptAvlfTWIoTD20xqWu0j48hv5882Gi1gVFT8kIqDLOYGbk45bBfj9j9zxdWsHGahQMYJH9ct/4IqE9ftq1PycMOLLAcq14IK7bMJIlyeATVjlmFfv8FM=
+      on:
+        tags: true
 install:
-- >
-    if python -V 2>&1 | grep 'Python 2' ; then
-       pip install -r requirements2-dev.txt
-    else
-       pip install -r requirements-dev.txt
-    fi
+- |
+  if python -V 2>&1 | grep 'Python 2' ; then
+     pip install -r requirements2-dev.txt
+  else
+     pip install -r requirements-dev.txt
+  fi
 - pip install 'celery[redis]'

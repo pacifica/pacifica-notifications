@@ -39,7 +39,7 @@ before_test:
     createdb pacifica_metadata;
     C:\pacifica\Scripts\activate.ps1;
     Start-Process C:\pacifica\Scripts\MetadataServer.exe -WorkingDirectory "travis\metadata" -RedirectStandardError metadata-error.log -RedirectStandardOutput metadata-output.log;
-    Start-Process C:\pacifica\Scripts\python.exe -ArgumentList "test_files\cherrypy_catch.py" -RedirectStandardError catch-error.log -RedirectStandardOutput catch-output.log;
+    Start-Process C:\pacifica\Scripts\python.exe -ArgumentList "tests\cherrypy_catch_test.py" -RedirectStandardError catch-error.log -RedirectStandardOutput catch-output.log;
     Invoke-WebRequest https://github.com/pacifica/pacifica-metadata/archive/master.zip -OutFile pacifica-metadata.zip;
     Expand-Archive pacifica-metadata.zip -DestinationPath C:\pacifica-metadata;
     nuget install redis-64 -excludeversion;
@@ -57,8 +57,10 @@ test_script:
 - ps: >
     mkdir C:\tmp; C:\pacifica\Scripts\activate.ps1;
     pre-commit run -a;
-    $celery_proc = Start-Process C:\pacifica\Scripts\coverage.exe -ArgumentList "run --include=pacifica/* -p -m celery -A pacifica.notifications.tasks worker -l info -c 1 -P solo" -RedirectStandardError celery-error.log -RedirectStandardOutput celery-output.log;
-    coverage run --include='pacifica/*' -p -m pytest -v;
+    $env:NOTIFICATIONS_CPCONFIG = "$PWD/server.conf";
+    pip install .; cd tests;
+    $celery_proc = Start-Process C:\pacifica\Scripts\coverage.exe -ArgumentList "run --include=*/site-packages/pacifica/notifications/* -p -m celery -A pacifica.notifications.tasks worker -l info -c 1 -P solo" -RedirectStandardError celery-error.log -RedirectStandardOutput celery-output.log;
+    coverage run --include='*/site-packages/pacifica/notifications/*' -p -m pytest -v;
     python -m celery -A pacifica.notifications.tasks control shutdown;
     $celery_proc | Wait-Process;
     ls .coverage* | %{ python -m coverage combine -a $_.name };
