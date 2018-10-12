@@ -7,7 +7,7 @@ from time import sleep
 from json import loads, dumps
 import requests
 from pacifica.notifications.orm import EventMatch
-from pacifica.notifications.test.common import NotificationsCPTest, eventmatch_droptables
+from common_test import NotificationsCPTest, eventmatch_droptables
 
 
 class CeleryCPTest(NotificationsCPTest):

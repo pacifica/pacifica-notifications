@@ -3,7 +3,7 @@
 """Test the example module."""
 from json import dumps
 import requests
-from pacifica.notifications.test.common import NotificationsCPTest, eventmatch_droptables
+from common_test import NotificationsCPTest, eventmatch_droptables
 
 
 class EventMatchCPTest(NotificationsCPTest):
