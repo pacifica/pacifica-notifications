@@ -16,21 +16,21 @@ stages:
 - deploy
 env:
   BROKER_URL: redis://localhost:6379/0
+  PEEWEE_URL: postgres://postgres:@localhost/pacifica_metadata
 ".script": &1
 - pip install .
 - export NOTIFICATIONS_CPCONFIG="$PWD/server.conf"
 - cd tests
-- coverage run --include='*/site-packages/pacifica/notifications/*' -p -m celery -A
-  pacifica.notifications.tasks worker -c 1 -P solo -l info &
+- coverage run --include='*/site-packages/pacifica/notifications/*' -p -m celery -A pacifica.notifications.tasks worker -c 1 -P solo -l info &
 - coverage run --include='*/site-packages/pacifica/notifications/*' -p -m pytest -v
 - celery -A pacifica.notifications.tasks control shutdown || true
 - coverage combine -a .coverage*
 - coverage report -m --fail-under 100
 ".before_script": &2
 - psql -c 'create database pacifica_metadata;' -U postgres
-- export POSTGRES_ENV_POSTGRES_USER=postgres
-- export POSTGRES_ENV_POSTGRES_PASSWORD=
-- pushd travis/metadata; MetadataServer.py & echo $! > metadata.pid; popd;
+- export METADATA_CPCONFIG="$PWD/travis/metadata/server.conf"
+- export POLICY_CPCONFIG="$PWD/travis/policy/server.conf"
+- pushd travis/metadata; pacifica-metadata & echo $! > metadata.pid; popd;
 - |
   MAX_TRIES=60 HTTP_CODE=$(curl -sL -w "%{http_code}\\n" localhost:8121/keys -o /dev/null || true);
   while [[ $HTTP_CODE != 200 && $MAX_TRIES > 0 ]] ; do
@@ -40,12 +40,13 @@ env:
   done;
 - |
   TOP_DIR=$PWD MD_TEMP=$(mktemp -d);
+  VERSION=$(pip show pacifica-metadata | grep Version: | awk '{ print $2 }')
   git clone https://github.com/pacifica/pacifica-metadata.git ${MD_TEMP};
-  pushd ${MD_TEMP};
-  python test_files/loadit.py;
+  pushd ${MD_TEMP}; git checkout v${VERSION};
+  python tests/test_files/loadit_test.py;
   popd;
   rm -rf ${MD_TEMP};
-- pushd travis/policy; PolicyServer.py & echo $! > PolicyServer.pid; popd;
+- pushd travis/policy; pacifica-policy & echo $! > policy.pid; popd;
 - pushd tests; python cherrypy_catch_test.py & echo $! > cherrypy-catch.pid; popd;
 jobs:
   include:
@@ -97,4 +98,4 @@ install:
   else
      pip install -r requirements-dev.txt
   fi
-- pip install 'celery[redis]'
+- pip install 'celery[redis]' 'redis<3.0'
