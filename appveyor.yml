@@ -9,8 +9,7 @@ environment:
   PGUSER: postgres
   PGPASSWORD: Password12!
   PGSQL_PATH: C:\Program Files\PostgreSQL\9.6
-  POSTGRES_ENV_POSTGRES_USER: postgres
-  POSTGRES_ENV_POSTGRES_PASSWORD: Password12!
+  PEEWEE_URL: postgres://postgres:Password12!@localhost/pacifica_metadata
   BROKER_URL: redis://localhost:6379/0
   matrix:
   - PYTHON: C:\Python27-x64
@@ -29,7 +28,7 @@ install:
     } else {
       python -m pip install -r requirements2-dev.txt;
     }
-    python -m pip install 'celery[eventlet]' 'celery[redis]' redis eventlet;
+    python -m pip install 'celery[redis]' 'redis<3.0';
 
 build: off
 
@@ -38,20 +37,23 @@ before_test:
     $env:PATH = "${env:PGSQL_PATH}\bin;${env:PYTHON}\Scripts;${env:PATH}";
     createdb pacifica_metadata;
     C:\pacifica\Scripts\activate.ps1;
-    Start-Process C:\pacifica\Scripts\MetadataServer.exe -WorkingDirectory "travis\metadata" -RedirectStandardError metadata-error.log -RedirectStandardOutput metadata-output.log;
-    Start-Process C:\pacifica\Scripts\python.exe -ArgumentList "tests\cherrypy_catch_test.py" -RedirectStandardError catch-error.log -RedirectStandardOutput catch-output.log;
-    Invoke-WebRequest https://github.com/pacifica/pacifica-metadata/archive/master.zip -OutFile pacifica-metadata.zip;
+    $env:METADATA_CPCONFIG = "$PWD/travis/metadata/server.conf";
+    $env:POLICY_CPCONFIG = "$PWD/travis/policy/server.conf";
+    $env:METADATA_URL = "http://127.0.0.1:8121";
+    $env:STATUS_URL = "http://127.0.0.1:8121/groups";
+    Start-Process C:\pacifica\Scripts\pacifica-metadata.exe -RedirectStandardError metadata-error.log -RedirectStandardOutput metadata-output.log;
+    $MD_VERSION = `pip show pacifica-metadata | grep Version: | awk '{ print $2 }';
+    Invoke-WebRequest https://github.com/pacifica/pacifica-metadata/archive/v${MD_VERSION}.zip -OutFile pacifica-metadata.zip;
     Expand-Archive pacifica-metadata.zip -DestinationPath C:\pacifica-metadata;
     nuget install redis-64 -excludeversion;
     redis-64\tools\redis-server.exe --service-install;
     redis-64\tools\redis-server.exe --service-start;
     Invoke-WebRequest http://localhost:8121/users;
-    Invoke-WebRequest http://127.0.0.1:8080;
-    pushd C:\pacifica-metadata\pacifica-metadata-master;
-    python -m test_files.loadit;
+    pushd C:\pacifica-metadata\pacifica-metadata-${MD_VERSION};
+    python tests\test_files\loadit_test.py;
     popd;
-    Start-Process C:\pacifica\Scripts\PolicyServer.exe -WorkingDirectory "travis\policy" -RedirectStandardError policy-error.log -RedirectStandardOutput policy-output.log;
-
+    Start-Process C:\pacifica\Scripts\pacifica-policy.exe -RedirectStandardError policy-error.log -RedirectStandardOutput policy-output.log;
+    Start-Process C:\pacifica\Scripts\python.exe -ArgumentList "tests\cherrypy_catch_test.py" -RedirectStandardError catch-error.log -RedirectStandardOutput catch-output.log;
 
 test_script:
 - ps: >
@@ -60,7 +62,8 @@ test_script:
     $env:NOTIFICATIONS_CPCONFIG = "$PWD/server.conf";
     pip install .; cd tests;
     $celery_proc = Start-Process C:\pacifica\Scripts\coverage.exe -ArgumentList "run --include=*/site-packages/pacifica/notifications/* -p -m celery -A pacifica.notifications.tasks worker -l info -c 1 -P solo" -RedirectStandardError celery-error.log -RedirectStandardOutput celery-output.log;
-    coverage run --include='*/site-packages/pacifica/notifications/*' -p -m pytest -v;
+    sleep 3;
+    coverage run --include='*/site-packages/pacifica/notifications/*' -p -m pytest -vx;
     python -m celery -A pacifica.notifications.tasks control shutdown;
     $celery_proc | Wait-Process;
     ls .coverage* | %{ python -m coverage combine -a $_.name };

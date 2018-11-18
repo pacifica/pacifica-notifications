@@ -35,7 +35,8 @@ class CeleryCPTest(NotificationsCPTest):
         eventmatch_obj = resp.json()
         self.assertEqual(eventmatch_obj['user'], 'dmlb2001')
         self.assertEqual(
-            eventmatch_obj['target_url'], 'http://127.0.0.1:8080/something/no/where')
+            eventmatch_obj['target_url'], 'http://127.0.0.1:8080/something/no/where'
+        )
         uuid_list.append(eventmatch_obj['uuid'])
         event_obj = loads(open(join('test_files', 'events.json')).read())
         resp = requests.post(
@@ -44,7 +45,7 @@ class CeleryCPTest(NotificationsCPTest):
             headers={'Content-Type': 'application/cloudevents+json; charset=utf-8'}
         )
         self.assertEqual(resp.status_code, 200)
-        sleep(8)
+        sleep(10)
         for uuid in uuid_list:
             eventmatch_obj = EventMatch.get(EventMatch.uuid == uuid)
             self.assertEqual(eventmatch_obj.disabled.year, datetime.now().year)
@@ -59,7 +60,8 @@ class CeleryCPTest(NotificationsCPTest):
         eventmatch_obj = resp.json()
         self.assertEqual(eventmatch_obj['user'], 'dmlb2001')
         self.assertEqual(
-            eventmatch_obj['target_url'], 'http://127.0.0.1:8192/something/no/where')
+            eventmatch_obj['target_url'], 'http://127.0.0.1:8192/something/no/where'
+        )
         event_obj = loads(open(join('test_files', 'events.json')).read())
         resp = requests.post(
             '{}/receive'.format(self.url),
@@ -67,16 +69,20 @@ class CeleryCPTest(NotificationsCPTest):
             headers={'Content-Type': 'application/cloudevents+json; charset=utf-8'}
         )
         self.assertEqual(resp.status_code, 200)
-        sleep(5)
+        sleep(10)
+        EventMatch.connect()
         eventmatch_obj = EventMatch.get(
-            EventMatch.uuid == eventmatch_obj['uuid'])
+            EventMatch.uuid == eventmatch_obj['uuid']
+        )
+        EventMatch.close()
         self.assertEqual(eventmatch_obj.disabled.year, datetime.now().year)
 
     @eventmatch_droptables
     def test_create(self):
         """Test the create POST method in EventMatch."""
         resp = self._create_eventmatch(
-            headers={'Http-Remote-User': 'dmlb2001'})
+            headers={'Http-Remote-User': 'dmlb2001'}
+        )
         eventmatch_obj = resp.json()
         self.assertEqual(eventmatch_obj['user'], 'dmlb2001')
         event_obj = loads(open(join('test_files', 'events.json')).read())
@@ -86,7 +92,10 @@ class CeleryCPTest(NotificationsCPTest):
             headers={'Content-Type': 'application/cloudevents+json; charset=utf-8'}
         )
         self.assertEqual(resp.status_code, 200)
-        sleep(5)
+        sleep(10)
+        EventMatch.connect()
         eventmatch_obj = EventMatch.get(
-            EventMatch.uuid == eventmatch_obj['uuid'])
+            EventMatch.uuid == eventmatch_obj['uuid']
+        )
+        EventMatch.close()
         self.assertEqual(eventmatch_obj.disabled, None)

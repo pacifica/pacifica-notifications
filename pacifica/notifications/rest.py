@@ -23,7 +23,10 @@ def encode_text(thing_obj):
 
 def get_remote_user():
     """Get the remote user from cherrypy request headers."""
-    return cherrypy.request.headers.get('Http-Remote-User', get_config().get('DEFAULT', 'default_user'))
+    return cherrypy.request.headers.get(
+        'Http-Remote-User',
+        get_config().get('DEFAULT', 'default_user')
+    )
 
 
 def error_page_default(**kwargs):
@@ -62,7 +65,9 @@ class EventMatch(object):
             }
         },
         '$ref': '#/definitions/eventmatch',
-        'not': {'required': ['uuid', 'user', 'created', 'updated', 'deleted', 'version']}
+        'not': {
+            'required': ['uuid', 'user', 'created', 'updated', 'deleted', 'version']
+        }
     }
 
     @staticmethod
@@ -90,10 +95,11 @@ class EventMatch(object):
         else:
             cherrypy.response.headers['Content-Type'] = 'application/json'
             orm.EventMatch.connect()
-            objs = [x.to_hash() for x in orm.EventMatch.select().where(
+            query = orm.EventMatch.select().where(
                 (orm.EventMatch.user == get_remote_user()) &
                 (orm.EventMatch.deleted >> None)
-            )]
+            )
+            objs = [x.to_hash() for x in query]
             orm.EventMatch.close()
         if objs:
             return encode_text(dumps(objs))
@@ -125,7 +131,8 @@ class EventMatch(object):
         event_match_obj = loads(cherrypy.request.body.read().decode('utf8'))
         validate(event_match_obj, cls.json_schema)
         event_match_obj['extensions'] = dumps(
-            event_match_obj.get('extensions', {}))
+            event_match_obj.get('extensions', {})
+        )
         event_match_obj['user'] = get_remote_user()
         event_obj = orm.EventMatch(**event_match_obj)
         event_obj.validate_jsonpath()
