@@ -41,6 +41,7 @@ before_test:
     $env:POLICY_CPCONFIG = "$PWD/travis/policy/server.conf";
     $env:METADATA_URL = "http://127.0.0.1:8121";
     $env:STATUS_URL = "http://127.0.0.1:8121/groups";
+    pacifica-metadata-cmd dbsync;
     Start-Process C:\pacifica\Scripts\pacifica-metadata.exe -RedirectStandardError metadata-error.log -RedirectStandardOutput metadata-output.log;
     $MD_VERSION = `pip show pacifica-metadata | grep Version: | awk '{ print $2 }';
     Invoke-WebRequest https://github.com/pacifica/pacifica-metadata/archive/v${MD_VERSION}.zip -OutFile pacifica-metadata.zip;

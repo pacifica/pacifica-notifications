@@ -17,14 +17,16 @@ def get_config():
             'default_user'
         )
     })
+    configparser.add_section('celery')
+    configparser.set('celery', 'broker_url', getenv(
+        'BROKER_URL', 'pyamqp://'))
+    configparser.set('celery', 'backend_url', getenv(
+        'BACKEND_URL', 'rpc://'))
+    configparser.add_section('notifications')
+    configparser.set('notifications', 'policy_url', getenv(
+        'POLICY_URL', 'http://127.0.0.1:8181'))
     configparser.add_section('database')
-    configparser.set(
-        'database',
-        'peewee_url',
-        getenv(
-            'PEEWEE_URL',
-            'sqliteext:///db.sqlite3'
-        )
-    )
+    configparser.set('database', 'peewee_url', getenv(
+        'PEEWEE_URL', 'sqliteext:///db.sqlite3'))
     configparser.read(CONFIG_FILE)
     return configparser

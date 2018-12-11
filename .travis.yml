@@ -30,6 +30,7 @@ env:
 - psql -c 'create database pacifica_metadata;' -U postgres
 - export METADATA_CPCONFIG="$PWD/travis/metadata/server.conf"
 - export POLICY_CPCONFIG="$PWD/travis/policy/server.conf"
+- pacifica-metadata-cmd dbsync
 - pushd travis/metadata; pacifica-metadata & echo $! > metadata.pid; popd;
 - |
   MAX_TRIES=60 HTTP_CODE=$(curl -sL -w "%{http_code}\\n" localhost:8121/keys -o /dev/null || true);
