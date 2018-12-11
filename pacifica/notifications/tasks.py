@@ -1,19 +1,19 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """The Celery tasks module."""
-from os import getenv
 from datetime import datetime
 from json import dumps
 import requests
 from requests.exceptions import RequestException
 from celery import Celery
-from pacifica.notifications.orm import EventMatch
-from pacifica.notifications.jsonpath import parse, find
+from .orm import EventMatch
+from .jsonpath import parse, find
+from .config import get_config
 
 CELERY_APP = Celery(
     'notifications',
-    broker=getenv('BROKER_URL', 'pyamqp://'),
-    backend=getenv('BACKEND_URL', 'rpc://')
+    broker=get_config().get('celery', 'broker_url'),
+    backend=get_config().get('celery', 'backend_url')
 )
 
 
@@ -48,7 +48,7 @@ def query_policy(eventmatch, event_obj):
     """Query policy server to see if the event should be routed."""
     resp = requests.post(
         '{}/events/{}'.format(
-            getenv('POLICY_URL', 'http://127.0.0.1:8181'),
+            get_config().get('notifications', 'policy_url'),
             eventmatch['user']
         ),
         data=dumps(event_obj),
