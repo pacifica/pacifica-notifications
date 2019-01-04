@@ -7,11 +7,9 @@ try:  # pip version 9
 except ImportError:
     from pip._internal.req import parse_requirements
 from setuptools import setup, find_packages
-from six import PY2
 
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
-REQ_FILE = 'requirements2.txt' if PY2 else 'requirements.txt'
-INSTALL_REQS = parse_requirements(REQ_FILE, session='hack')
+INSTALL_REQS = parse_requirements('requirements.txt', session='hack')
 
 setup(
     name='pacifica-notifications',
@@ -32,5 +30,13 @@ setup(
             'pacifica-notifications=pacifica.notifications.__main__:main'
         ]
     },
-    install_requires=[str(ir.req) for ir in INSTALL_REQS]
+    install_requires=[str(ir.req) for ir in INSTALL_REQS],
+    extras_require={
+        ':python_version=="2.7"': [
+            'jsonpath-ng'
+        ],
+        ':python_version>="3.0"': [
+            'jsonpath2'
+        ]
+    }
 )

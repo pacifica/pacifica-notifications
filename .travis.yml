@@ -93,10 +93,5 @@ jobs:
       on:
         tags: true
 install:
-- |
-  if python -V 2>&1 | grep 'Python 2' ; then
-     pip install -r requirements2-dev.txt
-  else
-     pip install -r requirements-dev.txt
-  fi
+- pip install -r requirements-dev.txt
 - pip install 'celery[redis]' 'redis<3.0'
