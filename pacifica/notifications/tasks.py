@@ -20,12 +20,12 @@ CELERY_APP = Celery(
 @CELERY_APP.task
 def dispatch_event(event_obj):
     """Get all the events and see which match."""
-    EventMatch.connect()
+    EventMatch.database_connect()
     eventmatch_objs = EventMatch.select().where(
         (EventMatch.deleted >> None) &
         (EventMatch.disabled >> None)
     )
-    EventMatch.close()
+    EventMatch.database_close()
     for eventmatch in eventmatch_objs:
         jsonpath_expr = parse(eventmatch.jsonpath)
         if find(jsonpath_expr, event_obj):
@@ -34,13 +34,13 @@ def dispatch_event(event_obj):
 
 def disable_eventmatch(eventmatch_uuid, error):
     """Disable the eventmatch obj."""
-    EventMatch.connect()
+    EventMatch.database_connect()
     with EventMatch.atomic():
         eventmatch = EventMatch.get(EventMatch.uuid == eventmatch_uuid)
         eventmatch.disabled = datetime.now()
         eventmatch.error = error
         eventmatch.save()
-    EventMatch.close()
+    EventMatch.database_close()
 
 
 @CELERY_APP.task

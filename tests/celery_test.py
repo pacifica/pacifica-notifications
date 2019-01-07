@@ -70,11 +70,11 @@ class CeleryCPTest(NotificationsCPTest):
         )
         self.assertEqual(resp.status_code, 200)
         sleep(10)
-        EventMatch.connect()
+        EventMatch.database_connect()
         eventmatch_obj = EventMatch.get(
             EventMatch.uuid == eventmatch_obj['uuid']
         )
-        EventMatch.close()
+        EventMatch.database_close()
         self.assertEqual(eventmatch_obj.disabled.year, datetime.now().year)
 
     @eventmatch_droptables
@@ -93,9 +93,9 @@ class CeleryCPTest(NotificationsCPTest):
         )
         self.assertEqual(resp.status_code, 200)
         sleep(10)
-        EventMatch.connect()
+        EventMatch.database_connect()
         eventmatch_obj = EventMatch.get(
             EventMatch.uuid == eventmatch_obj['uuid']
         )
-        EventMatch.close()
+        EventMatch.database_close()
         self.assertEqual(eventmatch_obj.disabled, None)

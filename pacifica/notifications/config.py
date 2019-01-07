@@ -28,5 +28,9 @@ def get_config():
     configparser.add_section('database')
     configparser.set('database', 'peewee_url', getenv(
         'PEEWEE_URL', 'sqliteext:///db.sqlite3'))
+    configparser.set('database', 'connect_attempts', getenv(
+        'DATABASE_CONNECT_ATTEMPTS', '10'))
+    configparser.set('database', 'connect_wait', getenv(
+        'DATABASE_CONNECT_WAIT', '20'))
     configparser.read(CONFIG_FILE)
     return configparser
