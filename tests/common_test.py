@@ -5,7 +5,7 @@ from json import dumps
 import requests
 import cherrypy
 from cherrypy.test import helper
-from pacifica.notifications.orm import database_setup, EventMatch
+from pacifica.notifications.orm import EventMatch
 from pacifica.notifications.rest import Root, error_page_default
 from pacifica.notifications.globals import CHERRYPY_CONFIG
 
@@ -14,7 +14,10 @@ def eventmatch_droptables(func):
     """Setup the database and drop it once done."""
     def wrapper(*args, **kwargs):
         """Create the database table."""
-        database_setup()
+        EventMatch.database_connect()
+        if EventMatch.table_exists():
+            EventMatch.drop_table()
+        EventMatch.create_table()
         func(*args, **kwargs)
         EventMatch.drop_table()
     return wrapper

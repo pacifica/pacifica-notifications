@@ -74,14 +74,14 @@ class EventMatch(object):
     def _http_get(event_uuid):
         """Internal get event by UUID and return peewee obj."""
         cherrypy.response.headers['Content-Type'] = 'application/json'
-        orm.EventMatch.connect()
+        orm.EventMatch.database_connect()
         try:
             event_obj = orm.EventMatch.get(
                 orm.EventMatch.uuid == UUID('{{{}}}'.format(event_uuid)))
         except DoesNotExist:
-            orm.EventMatch.close()
+            orm.EventMatch.database_close()
             raise HTTPError(403, 'Forbidden')
-        orm.EventMatch.close()
+        orm.EventMatch.database_close()
         if event_obj.user != get_remote_user() or event_obj.deleted:
             raise HTTPError(403, 'Forbidden')
         return event_obj
@@ -94,13 +94,13 @@ class EventMatch(object):
             objs = cls._http_get(event_uuid).to_hash()
         else:
             cherrypy.response.headers['Content-Type'] = 'application/json'
-            orm.EventMatch.connect()
+            orm.EventMatch.database_connect()
             query = orm.EventMatch.select().where(
                 (orm.EventMatch.user == get_remote_user()) &
                 (orm.EventMatch.deleted >> None)
             )
             objs = [x.to_hash() for x in query]
-            orm.EventMatch.close()
+            orm.EventMatch.database_close()
         if objs:
             return encode_text(dumps(objs))
         raise HTTPError(403, 'Forbidden')
@@ -117,17 +117,17 @@ class EventMatch(object):
             setattr(event_obj, key, value)
         event_obj.updated = datetime.now()
         event_obj.validate_jsonpath()
-        orm.EventMatch.connect()
+        orm.EventMatch.database_connect()
         with orm.EventMatch.atomic():
             event_obj.save()
-        orm.EventMatch.close()
+        orm.EventMatch.database_close()
         return cls.GET(str(event_obj.uuid))
 
     @classmethod
     # pylint: disable=invalid-name
     def POST(cls):
         """Create an Event Match obj in the database."""
-        orm.EventMatch.connect()
+        orm.EventMatch.database_connect()
         event_match_obj = loads(cherrypy.request.body.read().decode('utf8'))
         validate(event_match_obj, cls.json_schema)
         event_match_obj['extensions'] = dumps(
@@ -138,7 +138,7 @@ class EventMatch(object):
         event_obj.validate_jsonpath()
         with orm.EventMatch.atomic():
             event_obj.save(force_insert=True)
-        orm.EventMatch.close()
+        orm.EventMatch.database_close()
         return cls.GET(str(event_obj.uuid))
 
     @classmethod
@@ -146,12 +146,12 @@ class EventMatch(object):
     def DELETE(cls, event_uuid):
         """Delete the event by uuid."""
         event_obj = cls._http_get(event_uuid)
-        orm.EventMatch.connect()
+        orm.EventMatch.database_connect()
         event_obj.deleted = datetime.now()
         event_obj.updated = datetime.now()
         with orm.EventMatch.atomic():
             event_obj.save()
-        orm.EventMatch.close()
+        orm.EventMatch.database_close()
 
 
 # pylint: disable=too-few-public-methods
