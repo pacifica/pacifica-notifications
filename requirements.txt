@@ -1,6 +1,5 @@
 celery
 cherrypy
-jsonpath2
 jsonschema
 peewee
 requests

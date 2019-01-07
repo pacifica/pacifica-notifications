@@ -23,11 +23,7 @@ install:
     Start-Process C:\elasticsearch\elasticsearch-5.6.5\bin\elasticsearch;
     C:\pacifica\Scripts\activate.ps1;
     python -m pip install --upgrade pip setuptools wheel;
-    if ( $env:PYTHON -like "*36*" ) {
-      python -m pip install -r requirements-dev.txt;
-    } else {
-      python -m pip install -r requirements2-dev.txt;
-    }
+    python -m pip install -r requirements-dev.txt;
     python -m pip install 'celery[redis]' 'redis<3.0';
 
 build: off
