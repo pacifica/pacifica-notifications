@@ -1,12 +1,4 @@
-# Consumer Standardization
-
-## Overview
-
-This proposal standardizes the behavior of consumers of CloudEvents notifications (corresponding to Pacifica transactions).
-
-## Justification
-
-The behavior of consumers of CloudEvents notifications (corresponding to Pacifica transactions) is not standardized.
+# Consumer Expectations
 
 ## Implementation
 
