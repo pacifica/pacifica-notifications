@@ -58,9 +58,11 @@ The directory-tree listing for `consumer.zip` is as follows:
 
 ##### `init.sh`
 
-The shell script is empty.
+The shell script does nothing.
 ```bash
-# empty
+#!/usr/bin/env sh
+
+exit 0
 ```
 
 ##### `jsonpath2.txt`
