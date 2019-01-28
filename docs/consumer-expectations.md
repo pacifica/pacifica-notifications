@@ -123,12 +123,12 @@ if __name__ == "__main__":
 
 ### How do I deploy a consumer
 
-1.	Download and install the `pacifica-notifications` package.
+1. Download and install the `pacifica-notifications` package.
   * When the `pacifica-notifications` is successfully installed, the `start-pacifica-notifications-consumer` command is available on the `PATH`.
   * When started, the behavior of the `start-pacifica-notifications-consumer` command is to: (i) extract the contents of `consumer.zip` to a temporary location, (ii) create a new virtual environment, (iii) install the contents of the requirements file within said virtual environment, (iv) start a new asynchronous job processing queue, (v) start a new web service end-point for a new consumer, and (vi) register said web service end-point for said consumer with the given producer.
   * When stopped, the behavior of the `start-pacifica-notifications-consumer` command is reverse the side-effects of the start-up behavior (i.e., to clean up after itself).
 
-2.	Execute the `start-pacifica-notifications-consumer` command, specifying as command-line arguments:
+2. Execute the `start-pacifica-notifications-consumer` command, specifying as command-line arguments:
   * The location of `consumer.zip`;
   * The URL and authentication credentials for the producer; and
   * The configuration for the asynchronous job processing queue, web service end-point, etc.
@@ -164,9 +164,9 @@ Authentication credentials are included in all HTTP requests that are issued by 
 
 ## Glossary of Terms
 
-*	__Consumer:__ A software system that receives CloudEvents notifications (corresponding to Pacifica transactions) from producers. CloudEvents notifications are filtered by testing against a JSONPath [1]. If the test for a given CloudEvents notification is successful, then the consumer routes said CloudEvents notification to a processor.
-*	__Processor:__ A software system that downloads the input data files and metadata for a given Pacifica transaction, processes said input data files and associated metadata, generates output data files and associated metadata, and then creates a new Pacifica transaction.
-* __Producer:__ A software system that sends CloudEvents notifications (corresponding to Pacifica transactions) to consumers.
+ * __Consumer:__ A software system that receives CloudEvents notifications (corresponding to Pacifica transactions) from producers. CloudEvents notifications are filtered by testing against a JSONPath [1]. If the test for a given CloudEvents notification is successful, then the consumer routes said CloudEvents notification to a processor.
+ * __Processor:__ A software system that downloads the input data files and metadata for a given Pacifica transaction, processes said input data files and associated metadata, generates output data files and associated metadata, and then creates a new Pacifica transaction.
+ * __Producer:__ A software system that sends CloudEvents notifications (corresponding to Pacifica transactions) to consumers.
 
 ## References
 
