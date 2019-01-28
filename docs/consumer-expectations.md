@@ -133,19 +133,34 @@ if __name__ == "__main__":
   * The URL and authentication credentials for the producer; and
   * The configuration for the asynchronous job processing queue, web service end-point, etc.
 
-## Open Questions (to be addressed by this proposal)
+## Frequently Asked Questions
 
-* How should non-Python programming languages be handled?
-  * In principal, non-Python programming languages could be called from the Python entry-point.
-  * In practice, it may be beneficial to maintain separate `pacifica-notifications` ports for each programming language.
+### Are locally-generated files persisted after the entry-point for a consumer has terminated?
 
-* How to handle authentication and/or authorization?
+No. Locally-generated files are deleted as part of the "clean up" behavior of the `start-pacifica-notifications-consumer` command.
 
-* How to handle blocking on two-or-more CloudEvents notifications (i.e., to receive the first CloudEvents notification and then wait for the successive CloudEvents notifications)?
+### Can I develop the entry-point for a consumer to wait for two-or-more CloudEvents notifications?
 
-* Should locally-generated files be persisted after the entry-point has terminated?
+Yes. However, this behavior must be implemented by the entry-points themselves and is not provided by the default behavior of the `start-pacifica-notifications-consumer` command.
 
-* Should the `start-pacifica-notifications-consumer` command provide additional functionality (e.g., to specify a list of key-value pairs that are to be appended to every Pacifica transaction, e.g., the exit status code, the project name, the project charge code, etc.)?
+For example, to wait for two CloudEvents notifications:
+* Develop two consumers with two entry-points.
+* The entry-point for the first consumer receives and stores the CloudEvents notification, input data files and associated metadata in a temporary location and then terminates with exit status code `1` (do not create a new Pacifica transaction).
+* The entry-point for the second consumer receives the CloudEvents notification, consults the temporary location, performs its processing and then exits with status code `0` (create a new Pacifica transaction).
+
+### Can I develop the entry-point for a consumer using a non-Python3 programming language?
+
+No. Only Python3 is supported as the programming language for the entry-point file (viz., `__main__.py`).
+
+Non-Python3 executables can be called from within the entry-point using the [`subprocess`](https://docs.python.org/3/library/subprocess.html) module.
+
+Other programming languages can be called from within the entry-point using the appropriate interface, e.g., the [`jpy`](https://pypi.org/project/jpy/) package for the Java programming language, and the [`rpy2`](https://pypi.org/project/rpy2/) package for the R programming language.
+
+### How do I authenticate with the CloudEvents notification provider?
+
+Authentication credentials are specified in the configuration for the `pacifica-notifications` package (see https://pacifica-notifications.readthedocs.io/en/latest/configuration.html for more information).
+
+Authentication credentials are included in all HTTP requests that are issued by the consumer, e.g., the username is specified via the `Http-Remote-User` header (see https://pacifica-notifications.readthedocs.io/en/latest/exampleusage.html for more information).
 
 ## Glossary of Terms
 
