@@ -11,10 +11,11 @@ if [[ -z $PEEWEE_DATABASE_URL ]] ; then
   PEEWEE_DATABASE_URL="${PEEWEE_PROTO}://${PEEWEE_USER_PART}${PEEWEE_ADDR_PART}/${PEEWEE_DATABASE}"
 fi
 mkdir ~/.pacifica-notifications/
+cp /usr/src/app/server.conf ~/.pacifica-notifications/cpconfig.ini
 printf '[database]\npeewee_url = '${PEEWEE_DATABASE_URL}'\n' > ~/.pacifica-notifications/config.ini
-python -c 'from pacifica.notifications.orm import database_setup; database_setup()'
+pacifica-notifications-cmd dbsync
 uwsgi \
   --http-socket 0.0.0.0:8070 \
   --master \
   --die-on-term \
-  --wsgi-file /usr/src/app/pacifica/notifications/wsgi.py "$@"
+  --module pacifica.notifications.wsgi "$@"
