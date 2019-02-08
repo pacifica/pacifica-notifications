@@ -6,11 +6,12 @@ from datetime import datetime
 from time import sleep
 from json import loads, dumps
 import requests
+from cherrypy.test import helper
 from pacifica.notifications.orm import EventMatch
 from common_test import NotificationsCPTest, eventmatch_droptables
 
 
-class CeleryCPTest(NotificationsCPTest):
+class CeleryCPTest(NotificationsCPTest, helper.CPWebCase):
     """Test the EventMatch class."""
 
     @eventmatch_droptables

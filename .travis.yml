@@ -1,18 +1,11 @@
 language: python
 services:
 - postgresql
-- elasticsearch
 - redis-server
-addons:
-  apt:
-    sources:
-    - elasticsearch-5.x
-    packages:
-    - elasticsearch
-    - oracle-java8-set-default
 stages:
 - lint
 - test
+- test-docker
 - deploy
 env:
   BROKER_URL: redis://localhost:6379/0
@@ -83,6 +76,32 @@ jobs:
   - script: *1
     before_script: *2
     python: 2.7
+  - stage: test-docker
+    sudo: required
+    python: 2.7
+    services:
+    - docker
+    script:
+    - |
+      docker-compose build --pull;
+      docker-compose pull;
+      docker-compose up -d;
+    - |
+      python tests/cherrypy_catch_test.py &
+    - |
+      MAX_TRIES=60;
+      HTTP_CODE=$(docker-compose exec metadataserver curl -sL -w "%{http_code}\\n" localhost:8121/keys -o /dev/null || true);
+      while [[ $HTTP_CODE != 200 && $MAX_TRIES > 0 ]] ; do
+        sleep 2;
+        HTTP_CODE=$(docker-compose exec metadataserver curl -sL -w "%{http_code}\\n" localhost:8121/keys -o /dev/null || true);
+        MAX_TRIES=$(( MAX_TRIES - 1 ));
+      done;
+      docker-compose exec metadataserver curl -sL -w "%{http_code}\\n" localhost:8121/keys
+    - |
+      docker-compose exec metadataserver /bin/bash -c 'cd /usr/src/app/tests; python test_files/loadit_test.py';
+      curl http://127.0.0.1:8181/status/users/search/dmlb2001/simple;
+      curl -X POST -H 'Http-Remote-User: dmlb2001' -H 'Content-Type: application/json' http://localhost:8070/eventmatch -d '{ "name": "My Event Match", "jsonpath": "$.data", "target_url": "http://localhost:8080" }';
+      docker run -t --rm --network=pacificanotifications_default pacifica/cli upload --logon 10 tests;
   - stage: deploy
     services: []
     language: python
