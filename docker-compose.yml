@@ -2,93 +2,140 @@ version: '3.3'
 volumes:
   ingestdata:
 services:
-  notifyfrontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.uwsgi
+  ingestfrontend:
+    image: pacifica/ingest-frontend
     links:
+    - uniqueid
+    - metadataserver
+    - archiveinterface
     - policyserver
-    - notifyrabbit
-    - notifymysql
+    - ingestrabbit
+    - ingestmysql
     ports:
-    - 8070:8070
+    - 8066:8066
+    volumes:
+    - ingestdata:/srv
     environment:
-      PEEWEE_ADDR: notifymysql
-      BROKER_URL: pyamqp://guest:guest@notifyrabbit:5672//
-      POLICY_URL: http://policyserver:8181
+      VOLUME_PATH: /srv
+      PEEWEE_ADDR: ingestmysql
+      BROKER_URL: pyamqp://ingestrabbit
+      UNIQUEID_URL: http://uniqueid:8051
+      POLICY_INGEST_URL: http://policyserver:8181/ingest
+      METADATA_INGEST_URL: http://metadataserver:8121/ingest
+      ARCHIVEINTERFACE_URL: http://archiveinterface:8080
 
-  notifybackend:
-    build:
-      context: .
-      dockerfile: Dockerfile.celery
+  ingestbackend:
+    image: pacifica/ingest-backend
     links:
-     - policyserver
-     - notifyrabbit
-     - notifymysql
+    - uniqueid
+    - metadataserver
+    - archiveinterface
+    - policyserver
+    - ingestrabbit
+    - ingestmysql
+    volumes:
+    - ingestdata:/srv
     environment:
-      PEEWEE_ADDR: notifymysql
-      BROKER_URL: pyamqp://guest:guest@notifyrabbit:5672//
-      POLICY_URL: http://policyserver:8181
+      VOLUME_PATH: /srv
+      PEEWEE_ADDR: ingestmysql
+      BROKER_URL: pyamqp://ingestrabbit
+      UNIQUEID_URL: http://uniqueid:8051
+      POLICY_INGEST_URL: http://policyserver:8181/ingest
+      METADATA_INGEST_URL: http://metadataserver:8121/ingest
+      ARCHIVEINTERFACE_URL: http://archiveinterface:8080
 
-  notifymysql:
-    image: mysql:5
-    container_name: ingestmysql
+  ingestmysql:
+    image: mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: pacifica_notifications
-      MYSQL_USER: notifications
-      MYSQL_PASSWORD: notifications
-    ports:
-     - 3306:3306
+      MYSQL_DATABASE: pacifica_ingest
+      MYSQL_USER: ingest
+      MYSQL_PASSWORD: ingest
 
-  notifyrabbit:
+  ingestrabbit:
     image: rabbitmq
-    ports:
-     - 5672:5672
+
+  uniqueidmysql:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: pacifica_uniqueid
+      MYSQL_USER: uniqueid
+      MYSQL_PASSWORD: uniqueid
+
+  uniqueid:
+    image: pacifica/uniqueid
+    links:
+    - uniqueidmysql:mysql
+    environment:
+      PEEWEE_ADDR: mysql
+
+  archiveinterface:
+    image: pacifica/archiveinterface
 
   policyserver:
     image: pacifica/policy
+    ports:
+    - 8181:8181
     links:
-      - metadataserver
-    ports:
-      - 8181:8181
+    - metadataserver:metadata
     environment:
-      METADATA_PORT: tcp://metadataserver:8121
-
-  elasticdb:
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.10
-    environment:
-    - bootstrap.memory_lock=true
-    - xpack.security.enabled=false
-    - xpack.monitoring.enabled=false
-    - xpack.watcher.enabled=false
-    - http.cors.enabled=true
-    - "http.cors.allow-origin=\"/.*/\""
-    - "http.cors.allow-methods=OPTIONS, HEAD, GET, POST, PUT, DELETE"
-    - "http.cors.allow-headers=\"X-Requested-With,X-Auth-Token,Content-Type, Content-Length, Authorization\""
-    - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    ports:
-    - 9200:9200
-    - 9300:9300
+      METADATA_URL: http://metadata:8121
+      STATUS_URL: http://metadata:8121/groups
 
   metadatadb:
     image: postgres
     environment:
-      POSTGRES_PASSWORD: pacifica
+      POSTGRES_PASSWORD: metadata
       POSTGRES_DB: pacifica_metadata
       POSTGRES_USER: pacifica
 
   metadataserver:
     image: pacifica/metadata
     links:
-      - metadatadb
-      - elasticdb
-    ports:
-      - 8121:8121
+    - metadatadb
     environment:
-      ELASTICDB_PORT: tcp://elasticdb:9200
-      POSTGRES_PORT_5432_TCP_ADDR: metadatadb
+      PEEWEE_DATABASE: pacifica_metadata
+      PEEWEE_USER: pacifica
+      PEEWEE_ADDR: metadatadb
+      PEEWEE_PORT: 5432
+      PEEWEE_PROTO: postgres
+      PEEWEE_PASS: metadata
+      NOTIFICATIONS_URL: http://notifyfrontend:8070/receive
+
+  notifyrabbit:
+    image: rabbitmq
+
+  notifymysql:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: pacifica_notifications
+      MYSQL_USER: notifications
+      MYSQL_PASSWORD: notifications
+
+  notifybackend:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    links:
+    - notifyrabbit:amqp
+    - notifymysql:mysql
+    environment:
+      PEEWEE_ADDR: mysql
+      BROKER_URL: pyamqp://guest:guest@amqp:5672//
+      POLICY_URL: http://policyserver:8181
+
+  notifyfrontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.uwsgi
+    ports:
+    - 8070:8070
+    links:
+    - notifyrabbit:amqp
+    - notifymysql:mysql
+    environment:
+      PEEWEE_ADDR: mysql
+      BROKER_URL: pyamqp://guest:guest@amqp:5672//
+      POLICY_URL: http://policyserver:8181

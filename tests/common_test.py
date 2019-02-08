@@ -4,7 +4,6 @@
 from json import dumps
 import requests
 import cherrypy
-from cherrypy.test import helper
 from pacifica.notifications.orm import EventMatch
 from pacifica.notifications.rest import Root, error_page_default
 from pacifica.notifications.globals import CHERRYPY_CONFIG
@@ -22,8 +21,10 @@ def eventmatch_droptables(func):
         EventMatch.drop_table()
     return wrapper
 
+# pylint: disable=too-few-public-methods
 
-class NotificationsCPTest(helper.CPWebCase):
+
+class NotificationsCPTest(object):
     """Base class for all testing classes."""
 
     HOST = '127.0.0.1'
@@ -53,3 +54,4 @@ class NotificationsCPTest(helper.CPWebCase):
             data=dumps(local_data),
             headers=local_headers
         )
+# pylint: enable=too-few-public-methods
