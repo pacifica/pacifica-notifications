@@ -88,17 +88,17 @@ from promise import Promise
 
 # execute only if run as a top-level script
 if __name__ == '__main__':
-  # path to directory for input [CloudEvents](https://cloudevents.io/) notification
+  # path to directory for input CloudEvents notification
   orig_event_path = sys.argv[1]
 
-  # path to directory for output [CloudEvents](https://cloudevents.io/) notification
+  # path to directory for output CloudEvents notification
   new_event_path = sys.argv[2]
 
   def upload_did_fulfill(d):
     """Callback for Pacifica uploader promise's eventual value.
 
     Args:
-        d (dict): [CloudEvents](https://cloudevents.io/) notification.
+        d (dict): CloudEvents notification.
 
     Returns:
         Promise[bool]: True for success, False otherwise.
@@ -107,10 +107,10 @@ if __name__ == '__main__':
         BaseException: If an error occurs.
     """
 
-    # delete entire directory tree for input [CloudEvents](https://cloudevents.io/) notification
+    # delete entire directory tree for input CloudEvents notification
     shutil.rmtree(orig_event_path, ignore_errors=True)
 
-    # delete entire directory tree for output [CloudEvents](https://cloudevents.io/) notification
+    # delete entire directory tree for output CloudEvents notification
     shutil.rmtree(new_event_path, ignore_errors=True)
 
     # return True for success
@@ -120,7 +120,7 @@ if __name__ == '__main__':
     """Callback for Pacifica downloader promise's eventual value.
 
     Args:
-        d (dict): [CloudEvents](https://cloudevents.io/) notification.
+        d (dict): CloudEvents notification.
 
     Returns:
         Promise[bool]: True for success, False otherwise.
