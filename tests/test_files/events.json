@@ -11,7 +11,7 @@
       "value": 10
     },
     {
-      "destinationTable": "Transactions.proposal",
+      "destinationTable": "Transactions.project",
       "value": "1236\u00e9"
     },
     {
