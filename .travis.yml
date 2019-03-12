@@ -133,4 +133,4 @@ jobs:
         tags: true
 install:
 - pip install -r requirements-dev.txt
-- pip install 'celery[redis]' 'redis<3.0'
+- pip install 'celery[redis]' 'redis'
