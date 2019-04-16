@@ -56,7 +56,16 @@ class CeleryCPTest(NotificationsCPTest, helper.CPWebCase):
         """Test the create POST method in EventMatch."""
         resp = self._create_eventmatch(
             headers={'Http-Remote-User': 'dmlb2001'},
-            json_data={'target_url': 'http://127.0.0.1:8192/something/no/where'}
+            json_data={
+                'target_url': 'http://127.0.0.1:8192/something/no/where',
+                'auth': {
+                    'type': 'header',
+                    'header': {
+                        'type': 'Bearer',
+                        'credentials': 'somerandomsharedsecret'
+                    }
+                }
+            }
         )
         eventmatch_obj = resp.json()
         self.assertEqual(eventmatch_obj['user'], 'dmlb2001')

@@ -6,11 +6,12 @@ from time import sleep
 from datetime import datetime
 from json import loads
 from peewee import Model, CharField, TextField, DateTimeField, UUIDField, OperationalError, IntegerField
+from playhouse.migrate import SchemaMigrator, migrate
 from playhouse.db_url import connect
 from .config import get_config
 from .jsonpath import parse
 
-SCHEMA_MAJOR = 1
+SCHEMA_MAJOR = 2
 SCHEMA_MINOR = 0
 DB = connect(get_config().get('database', 'peewee_url'))
 
@@ -48,7 +49,8 @@ class OrmSync(object):
 
     versions = [
         (0, 0),
-        (1, 0)
+        (1, 0),
+        (2, 0)
     ]
 
     @staticmethod
@@ -68,9 +70,23 @@ class OrmSync(object):
 
     @classmethod
     def update_0_0_to_1_0(cls):
-        """Update by adding the boolean column."""
+        """Update by adding the new table."""
         if not EventMatch.table_exists():
             EventMatch.create_table()
+            migrator = SchemaMigrator(DB)
+            migrate(migrator.drop_column('eventmatch', 'auth'))
+
+    @classmethod
+    def update_1_0_to_2_0(cls):
+        """Update by adding the auth column."""
+        migrator = SchemaMigrator(DB)
+        migrate(
+            migrator.add_column(
+                'eventmatch',
+                'auth',
+                TextField(null=True)
+            )
+        )
 
     @classmethod
     def update_tables(cls):
@@ -184,6 +200,7 @@ class EventMatch(BaseModel):
     # JSONField is extension specific and we are using URLs to bind
     # to a database backend
     extensions = TextField(default='{}')
+    auth = TextField(default='{}', null=True)
     created = DateTimeField(default=datetime.now, index=True)
     updated = DateTimeField(default=datetime.now, index=True)
     deleted = DateTimeField(null=True, index=True)
@@ -207,6 +224,7 @@ class EventMatch(BaseModel):
             ret_obj[field_name] = getattr(self, field_name)
         ret_obj['uuid'] = str(ret_obj['uuid'])
         ret_obj['extensions'] = loads(ret_obj['extensions'])
+        ret_obj['auth'] = loads(ret_obj['auth'])
         for dt_element in ['disabled', 'deleted', 'updated', 'created']:
             if getattr(self, dt_element):
                 # pylint: disable=no-member
