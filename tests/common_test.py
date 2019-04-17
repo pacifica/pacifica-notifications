@@ -46,7 +46,14 @@ class NotificationsCPTest(object):
         local_data = {
             'name': 'testevent',
             'jsonpath': '$.data[?(@.value="Blah")].value',
-            'target_url': 'http://127.0.0.1:8080'
+            'target_url': 'http://127.0.0.1:8080',
+            'auth': {
+                'type': 'basic',
+                'basic': {
+                    'username': 'dmlb2001',
+                    'password': 'password'
+                }
+            }
         }
         local_data.update(kwargs.get('json_data', {}))
         return requests.post(

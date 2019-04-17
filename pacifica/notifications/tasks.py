@@ -63,6 +63,21 @@ def query_policy(eventmatch, event_obj):
         route_event.delay(eventmatch, event_obj)
 
 
+def event_auth_to_requests(eventmatch, headers):
+    """Convert the eventmatch authentication to requests arguments."""
+    requests_kwargs = {}
+    if eventmatch.get('auth').get('type', None) == 'basic':
+        auth_obj = eventmatch.get('auth').get('basic', {})
+        requests_kwargs['auth'] = (auth_obj.get('username', ''), auth_obj.get('password', ''))
+    elif eventmatch.get('auth').get('type', None) == 'header':
+        auth_obj = eventmatch.get('auth').get('header', {})
+        headers['Authorization'] = '{} {}'.format(
+            auth_obj.get('type', ''),
+            auth_obj.get('credentials', '')
+        )
+    return requests_kwargs
+
+
 @CELERY_APP.task
 def route_event(eventmatch, event_obj):
     """Route the event to the target url."""
@@ -70,10 +85,13 @@ def route_event(eventmatch, event_obj):
         new_extensions = event_obj.get('extensions', {})
         new_extensions.update(eventmatch.get('extensions', {}))
         event_obj['extensions'] = new_extensions
+        headers = {'Content-Type': 'application/json'}
+        extra_args = event_auth_to_requests(eventmatch, headers)
         resp = requests.post(
             eventmatch['target_url'],
             data=dumps(event_obj),
-            headers={'Content-Type': 'application/json'}
+            headers=headers,
+            **extra_args
         )
     except RequestException as ex:
         disable_eventmatch(eventmatch['uuid'], str(ex))
