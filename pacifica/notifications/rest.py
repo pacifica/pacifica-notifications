@@ -58,6 +58,32 @@ class EventMatch(object):
                     'target_url': {'type': 'string'},
                     'version': {'type': 'string'},
                     'extensions': {'type': 'object'},
+                    'auth': {
+                        'type': 'object',
+                        'properties': {
+                            'type': {
+                                'type': 'string',
+                                'enum': ['basic', 'header']
+                            },
+                            'basic': {
+                                'type': 'object',
+                                'properties': {
+                                    'username': {'type': 'string'},
+                                    'password': {'type': 'string'}
+                                },
+                                'required': ['username', 'password']
+                            },
+                            'header': {
+                                'type': 'object',
+                                'properties': {
+                                    'type': {'type': 'string'},
+                                    'credentials': {'type': 'string'}
+                                },
+                                'required': ['type', 'credentials']
+                            },
+                        },
+                        'required': ['type']
+                    },
                     'created': {'type': 'string', 'format': 'date-time'},
                     'updated': {'type': 'string', 'format': 'date-time'},
                     'deleted': {'type': ['string', 'null'], 'format': 'date-time'}
@@ -113,6 +139,7 @@ class EventMatch(object):
         json_obj = loads(cherrypy.request.body.read().decode('utf8'))
         validate(json_obj, cls.json_schema)
         json_obj['extensions'] = dumps(json_obj.get('extensions', {}))
+        json_obj['auth'] = dumps(json_obj.get('auth', {}))
         for key, value in json_obj.items():
             setattr(event_obj, key, value)
         event_obj.updated = datetime.now()
@@ -133,6 +160,7 @@ class EventMatch(object):
         event_match_obj['extensions'] = dumps(
             event_match_obj.get('extensions', {})
         )
+        event_match_obj['auth'] = dumps(event_match_obj.get('auth', {}))
         event_match_obj['user'] = get_remote_user()
         event_obj = orm.EventMatch(**event_match_obj)
         event_obj.validate_jsonpath()

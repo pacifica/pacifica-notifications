@@ -51,6 +51,54 @@ Content-Type: application/json
   "created": "2018-08-02T13:53:05.838827",
   "name": "My Event Match",
   "extensions": {},
+  "auth": {},
+  "target_url": "http://www.example.com/receive",
+  "error": null
+}
+```
+
+#### Create Event Subscription with Authentication
+
+Request:
+```
+POST /eventmatch
+Http-Remote-User: dmlb2001
+Content-Type: application/json
+{
+  "name": "My Event Match",
+  "jsonpath": "data",
+  "auth": {
+    "type": "basic",
+    "basic": {
+      "username": "myusername",
+      "password": "password"
+    }
+  },
+  "target_url": "http://www.example.com/recieve"
+}
+```
+
+Response:
+```
+Content-Type: application/json
+{
+  "user": "dmlb2001",
+  "updated": "2018-08-02T13:53:05.838827",
+  "uuid": "466725b0-cbe1-45cd-b034-c3209aa4b6e0",
+  "deleted": null,
+  "version": "v0.1",
+  "jsonpath": "data",
+  "disabled": null,
+  "created": "2018-08-02T13:53:05.838827",
+  "name": "My Event Match",
+  "extensions": {},
+  "auth": {
+    "type": "basic",
+    "basic": {
+      "username": "myusername",
+      "password": "password"
+    }
+  },
   "target_url": "http://www.example.com/receive",
   "error": null
 }
@@ -79,6 +127,7 @@ Content-Type: application/json
   "created": "2018-08-02T13:53:05.838827",
   "name": "My Event Match",
   "extensions": {},
+  "auth": {},
   "target_url": "http://www.example.com/receive",
   "error": null
 }
@@ -110,6 +159,7 @@ Content-Type: application/json
   "created": "2018-08-02T13:53:05.838827",
   "name": "My Event Match",
   "extensions": {},
+  "auth": {},
   "target_url": "http://api.example.com/receive",
   "error": null
 }
