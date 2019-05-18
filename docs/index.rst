@@ -17,6 +17,7 @@ availability of data in Pacifica.
    installation
    configuration
    exampleusage
+   consumer-expectations
    notify
 
 Indices and tables
