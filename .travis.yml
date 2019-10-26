@@ -1,4 +1,5 @@
 language: python
+dist: xenial
 services:
 - postgresql
 - redis-server
@@ -10,7 +11,7 @@ stages:
 env:
   BROKER_URL: redis://localhost:6379/0
   PEEWEE_URL: postgres://postgres:@localhost/pacifica_metadata
-".script": &1
+script:
 - export NOTIFICATIONS_CPCONFIG="$PWD/server.conf"
 - cd tests
 - pip install pacifica-notifications==0.2.3
@@ -39,48 +40,29 @@ env:
 - celery -A pacifica.notifications.tasks control shutdown || true
 - coverage combine -a .coverage*
 - coverage report -m --fail-under 100
-".before_script": &2
-- psql -c 'create database pacifica_metadata;' -U postgres
-- export METADATA_CPCONFIG="$PWD/travis/metadata/server.conf"
-- export POLICY_CPCONFIG="$PWD/travis/policy/server.conf"
-- pacifica-metadata-cmd dbsync
-- pushd travis/metadata; pacifica-metadata & echo $! > metadata.pid; popd;
-- |
-  MAX_TRIES=60 HTTP_CODE=$(curl -sL -w "%{http_code}\\n" localhost:8121/keys -o /dev/null || true);
-  while [[ $HTTP_CODE != 200 && $MAX_TRIES > 0 ]] ; do
-    sleep 1;
-    HTTP_CODE=$(curl -sL -w "%{http_code}\\n" localhost:8121/keys -o /dev/null || true);
-    MAX_TRIES=$(( MAX_TRIES - 1 ));
-  done;
-- |
-  TOP_DIR=$PWD MD_TEMP=$(mktemp -d);
-  VERSION=$(pip show pacifica-metadata | grep Version: | awk '{ print $2 }')
-  git clone https://github.com/pacifica/pacifica-metadata.git ${MD_TEMP};
-  pushd ${MD_TEMP}; git checkout v${VERSION};
-  python tests/test_files/loadit_test.py;
-  popd;
-  rm -rf ${MD_TEMP};
-- pushd travis/policy; pacifica-policy & echo $! > policy.pid; popd;
+before_script:
+- pip install ansible
+- ansible-galaxy install pacifica.ansible_pacifica pacifica.ansible_travis
+- ansible-playbook ~/.ansible/roles/pacifica.ansible_travis/molecule/common/playbook.yml -i ~/.ansible/roles/pacifica.ansible_travis/molecule/common/inventory.yml -e "ansible_python_interpreter=/home/travis/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/python travis_virtualenv=python${TRAVIS_PYTHON_VERSION} github_repository=notifications"
 - pushd tests; python cherrypy_catch_test.py & echo $! > cherrypy-catch.pid; popd;
 jobs:
   include:
   - stage: lint
     python: 3.6
+    before_script: skip
     script: pre-commit run -a
   - python: 2.7
+    before_script: skip
     script: pre-commit run -a
   - stage: test
-    script: *1
-    before_script: *2
     python: 3.6
-  - script: *1
-    before_script: *2
-    python: 2.7
+  - python: 2.7
   - stage: test-docker
     sudo: required
     python: 2.7
     services:
     - docker
+    before_script: skip
     script:
     - |
       docker-compose build --pull;
