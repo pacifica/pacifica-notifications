@@ -83,7 +83,7 @@ jobs:
       docker-compose exec metadataserver /bin/bash -c 'cd /usr/src/app/tests; python test_files/loadit_test.py';
       curl http://127.0.0.1:8181/status/users/search/dmlb2001/simple;
       curl -X POST -H 'Http-Remote-User: dmlb2001' -H 'Content-Type: application/json' http://localhost:8070/eventmatch -d '{ "name": "My Event Match", "jsonpath": "$.data", "target_url": "http://localhost:8080" }';
-      docker run -t --rm --network=pacificanotifications_default pacifica/cli upload --logon 10 tests;
+      docker run -t --rm --network=pacifica-notifications_default pacifica/cli upload --logon 10 tests;
   - stage: deploy
     services: []
     language: python
