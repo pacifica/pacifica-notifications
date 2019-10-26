@@ -24,7 +24,7 @@ def encode_text(thing_obj):
 def get_remote_user():
     """Get the remote user from cherrypy request headers."""
     return cherrypy.request.headers.get(
-        'Http-Remote-User',
+        get_config().get('notifications', 'user_header'),
         get_config().get('DEFAULT', 'default_user')
     )
 

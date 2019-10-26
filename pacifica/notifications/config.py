@@ -23,6 +23,8 @@ def get_config():
     configparser.set('celery', 'backend_url', getenv(
         'BACKEND_URL', 'rpc://'))
     configparser.add_section('notifications')
+    configparser.set('notifications', 'user_header', getenv(
+        'USER_HEADER', 'Http-Remote-User'))
     configparser.set('notifications', 'policy_url', getenv(
         'POLICY_URL', 'http://127.0.0.1:8181'))
     configparser.add_section('database')
