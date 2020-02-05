@@ -31,13 +31,5 @@ setup(
             'pacifica-notifications-cmd=pacifica.notifications.__main__:cmd'
         ]
     },
-    install_requires=[str(ir.req) for ir in INSTALL_REQS],
-    extras_require={
-        ':python_version=="2.7"': [
-            'jsonpath-ng'
-        ],
-        ':python_version>="3.0"': [
-            'jsonpath2'
-        ]
-    }
+    install_requires=[str(ir.req) for ir in INSTALL_REQS]
 )
