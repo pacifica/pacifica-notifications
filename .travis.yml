@@ -1,9 +1,6 @@
 language: python
 python: 3.6
-dist: xenial
-services:
-- postgresql
-- redis-server
+dist: bionic
 stages:
 - lint
 - test
@@ -79,7 +76,6 @@ jobs:
       curl -X POST -H 'Http-Remote-User: dmlb2001' -H 'Content-Type: application/json' http://localhost:8070/eventmatch -d '{ "name": "My Event Match", "jsonpath": "$.data", "target_url": "http://localhost:8080" }';
       docker run -t --rm --network=pacifica-notifications_default pacifica/cli upload --logon 10 tests;
   - stage: deploy
-    services: []
     language: python
     before_script: skip
     script: skip

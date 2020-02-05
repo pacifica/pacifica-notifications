@@ -16,7 +16,7 @@ setup(
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
     description='Pacifica Notifications Service',
-    url='https://pypi.python.org/pypi/pacifica-notifications/',
+    url='https://github.com/pacifica/pacifica-notifications/',
     long_description=open(path.join(
         path.abspath(path.dirname(__file__)),
         'README.md')).read(),
