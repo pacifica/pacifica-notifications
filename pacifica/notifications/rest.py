@@ -8,7 +8,6 @@ from jsonschema import validate
 import cherrypy
 from cherrypy import HTTPError
 from peewee import DoesNotExist
-from six import PY2
 from pacifica.notifications import orm
 from pacifica.notifications.config import get_config
 from pacifica.notifications.tasks import dispatch_event
@@ -16,8 +15,6 @@ from pacifica.notifications.tasks import dispatch_event
 
 def encode_text(thing_obj):
     """Encode the text to bytes."""
-    if PY2:  # pragma: no cover only for python 2
-        return str(thing_obj)
     return bytes(thing_obj, 'utf8')  # pragma: no cover only for python 3
 
 

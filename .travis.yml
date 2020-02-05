@@ -1,4 +1,5 @@
 language: python
+python: 3.6
 dist: xenial
 services:
 - postgresql
@@ -48,18 +49,11 @@ before_script:
 jobs:
   include:
   - stage: lint
-    python: 3.6
-    before_script: skip
-    script: pre-commit run -a
-  - python: 2.7
     before_script: skip
     script: pre-commit run -a
   - stage: test
-    python: 3.6
-  - python: 2.7
   - stage: test-docker
     sudo: required
-    python: 2.7
     services:
     - docker
     before_script: skip
@@ -87,28 +81,13 @@ jobs:
   - stage: deploy
     services: []
     language: python
-    before_install: skip
+    before_script: skip
     script: skip
-    python: 3.6
     deploy:
       skip_cleanup: true
       provider: pypi
       user: dmlb2000
       distributions: sdist bdist_wheel
-      password:
-        secure: unZRE1y5YPkan51bctexTG/KeVVe0deRKzg05sLNFTFzNPPxooOWDStb3AAKfzDl8+cGQmOyWDzQauDXlMUg9g3RPjmSKs5AzxxieP3VAg/gMuw/c5NyGgqcYjW+42ZzLf+xzpbbWddfyaqugvHJCm2MxN3XxC9SpejG3EqpQm2E7DTVq78R6tNrUe/tFybiO92ti6DDF7AZnfNdJkDMUm6mpZuIywyr3RJUv2hixllnUXHNFtbieLKubeSwLd6lXROA39GRUPz1/VrVJ8bFkP9iUufuBcxyAxI12MbFPt8JcVfFnQJaNkHRb+0YAY/Y+nSf21ix9jUNUB9TrbzKj0xAt8iuGt69E+r+idWzg7ruft9zVAOMzR2rJOUOLx6YZY+P430domlZMV2CzZYU265gbseq1sls2DLZwpbDWUo7ANfILEq6phj1h0W17+vlnLzuBufjj9oHWZNLoQnPITsuH0ZBjcmagC3Ck7HvfE8J9DbxWNu+XzNsb9dZRxykzAo65zj5uB/AfQ9h0KGqwYbKvih40RL3d0Xec3D3DjdFkH0n8cAGNhvptAvlfTWIoTD20xqWu0j48hv5882Gi1gVFT8kIqDLOYGbk45bBfj9j9zxdWsHGahQMYJH9ct/4IqE9ftq1PycMOLLAcq14IK7bMJIlyeATVjlmFfv8FM=
-      on:
-        tags: true
-  - services: []
-    language: python
-    before_install: skip
-    script: skip
-    python: 2.7
-    deploy:
-      skip_cleanup: true
-      provider: pypi
-      user: dmlb2000
-      distributions: bdist_wheel
       password:
         secure: unZRE1y5YPkan51bctexTG/KeVVe0deRKzg05sLNFTFzNPPxooOWDStb3AAKfzDl8+cGQmOyWDzQauDXlMUg9g3RPjmSKs5AzxxieP3VAg/gMuw/c5NyGgqcYjW+42ZzLf+xzpbbWddfyaqugvHJCm2MxN3XxC9SpejG3EqpQm2E7DTVq78R6tNrUe/tFybiO92ti6DDF7AZnfNdJkDMUm6mpZuIywyr3RJUv2hixllnUXHNFtbieLKubeSwLd6lXROA39GRUPz1/VrVJ8bFkP9iUufuBcxyAxI12MbFPt8JcVfFnQJaNkHRb+0YAY/Y+nSf21ix9jUNUB9TrbzKj0xAt8iuGt69E+r+idWzg7ruft9zVAOMzR2rJOUOLx6YZY+P430domlZMV2CzZYU265gbseq1sls2DLZwpbDWUo7ANfILEq6phj1h0W17+vlnLzuBufjj9oHWZNLoQnPITsuH0ZBjcmagC3Ck7HvfE8J9DbxWNu+XzNsb9dZRxykzAo65zj5uB/AfQ9h0KGqwYbKvih40RL3d0Xec3D3DjdFkH0n8cAGNhvptAvlfTWIoTD20xqWu0j48hv5882Gi1gVFT8kIqDLOYGbk45bBfj9j9zxdWsHGahQMYJH9ct/4IqE9ftq1PycMOLLAcq14IK7bMJIlyeATVjlmFfv8FM=
       on:

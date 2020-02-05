@@ -12,7 +12,6 @@ environment:
   PEEWEE_URL: postgres://postgres:Password12!@localhost/pacifica_metadata
   BROKER_URL: redis://localhost:6379/0
   matrix:
-  - PYTHON: C:\Python27-x64
   - PYTHON: C:\Python36-x64
 
 install:
