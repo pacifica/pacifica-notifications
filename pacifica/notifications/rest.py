@@ -37,7 +37,7 @@ def error_page_default(**kwargs):
     })
 
 
-class EventMatch(object):
+class EventMatch:
     """CherryPy EventMatch endpoint."""
 
     exposed = True
@@ -180,7 +180,7 @@ class EventMatch(object):
 
 
 # pylint: disable=too-few-public-methods
-class ReceiveEvent(object):
+class ReceiveEvent:
     """CherryPy Receive Event object."""
 
     exposed = True
@@ -197,7 +197,7 @@ class ReceiveEvent(object):
 
 
 # pylint: disable=too-few-public-methods
-class Root(object):
+class Root:
     """CherryPy Root Object."""
 
     exposed = True

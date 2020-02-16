@@ -103,27 +103,30 @@ services:
       PEEWEE_PASS: metadata
       NOTIFICATIONS_URL: http://notifyfrontend:8070/receive
 
-  notifyrabbit:
-    image: rabbitmq
+  notifyredis:
+    image: redis
+    ports:
+      - 6379:6379
 
-  notifymysql:
-    image: mysql
+  notifydb:
+    image: postgres
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: pacifica_notifications
-      MYSQL_USER: notifications
-      MYSQL_PASSWORD: notifications
+      POSTGRES_PASSWORD: notifications
+      POSTGRES_DB: pacifica_notifications
+      POSTGRES_USER: notifications
+    ports:
+      - 5432:5432
 
   notifybackend:
     build:
       context: .
       dockerfile: Dockerfile.celery
     links:
-    - notifyrabbit:amqp
-    - notifymysql:mysql
+    - notifyredis:redis
+    - notifydb:pgsql
     environment:
-      PEEWEE_ADDR: mysql
-      BROKER_URL: pyamqp://guest:guest@amqp:5672//
+      PEEWEE_ADDR: pgsql
+      BROKER_URL: redis://redis:6379/0
       POLICY_URL: http://policyserver:8181
 
   notifyfrontend:
@@ -133,9 +136,9 @@ services:
     ports:
     - 8070:8070
     links:
-    - notifyrabbit:amqp
-    - notifymysql:mysql
+    - notifyredis:redis
+    - notifydb:pgsql
     environment:
-      PEEWEE_ADDR: mysql
-      BROKER_URL: pyamqp://guest:guest@amqp:5672//
+      PEEWEE_ADDR: pgsql
+      BROKER_URL: redis://redis:6379/0
       POLICY_URL: http://policyserver:8181

@@ -2,9 +2,12 @@
 # -*- coding: utf-8 -*-
 """Test the example module."""
 from json import dumps
+from time import sleep
+import threading
 import requests
 import cherrypy
-from pacifica.notifications.orm import EventMatch
+from celery.bin.celery import main as celery_main
+from pacifica.notifications.orm import EventMatch, NotificationSystem, DB
 from pacifica.notifications.rest import Root, error_page_default
 from pacifica.notifications.globals import CHERRYPY_CONFIG
 
@@ -21,10 +24,8 @@ def eventmatch_droptables(func):
         EventMatch.drop_table()
     return wrapper
 
-# pylint: disable=too-few-public-methods
 
-
-class NotificationsCPTest(object):
+class NotificationsCPTest:
     """Base class for all testing classes."""
 
     HOST = '127.0.0.1'
@@ -61,4 +62,38 @@ class NotificationsCPTest(object):
             data=dumps(local_data),
             headers=local_headers
         )
-# pylint: enable=too-few-public-methods
+
+    # pylint: disable=invalid-name
+    def setUp(self):
+        """Setup the database with in memory sqlite."""
+        DB.drop_tables([EventMatch, NotificationSystem], safe=True)
+
+        def run_celery_worker():
+            """Run the main solo worker."""
+            return celery_main([
+                'celery', '-A', 'pacifica.notifications.tasks', 'worker', '--pool', 'solo',
+                '--quiet', '-b', 'redis://127.0.0.1:6379/0'
+            ])
+
+        self.celery_thread = threading.Thread(target=run_celery_worker)
+        self.celery_thread.start()
+        sleep(3)
+
+    # pylint: disable=invalid-name
+    def tearDown(self):
+        """Tear down the test and remove local state."""
+        try:
+            celery_main([
+                'celery', '-A', 'pacifica.notifications.tasks', 'control',
+                '-b', 'redis://127.0.0.1:6379/0', 'shutdown'
+            ])
+        except SystemExit:
+            pass
+        self.celery_thread.join()
+        try:
+            celery_main([
+                'celery', '-A', 'pacifica.notifications.tasks', '-b', 'redis://127.0.0.1:6379/0',
+                '--force', 'purge'
+            ])
+        except SystemExit:
+            pass

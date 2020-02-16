@@ -5,7 +5,7 @@ import cherrypy
 
 
 # pylint: disable=too-few-public-methods
-class Root(object):
+class Root:
     """Example root cherrypy class, method dispatcher required."""
 
     exposed = True

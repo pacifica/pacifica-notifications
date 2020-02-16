@@ -4,7 +4,7 @@
 from json import dumps
 import requests
 from cherrypy.test import helper
-from common_test import NotificationsCPTest, eventmatch_droptables
+from .common_test import NotificationsCPTest, eventmatch_droptables
 
 
 class EventMatchCPTest(NotificationsCPTest, helper.CPWebCase):

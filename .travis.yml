@@ -11,32 +11,9 @@ env:
   PEEWEE_URL: postgres://postgres:@localhost/pacifica_metadata
 script:
 - export NOTIFICATIONS_CPCONFIG="$PWD/server.conf"
+- pip install .
 - cd tests
-- pip install pacifica-notifications==0.2.3
-- python -c 'from pacifica.notifications.orm import database_setup; database_setup()'
-- pip install ..
-- >
-  coverage run --include '*/site-packages/pacifica/notifications/*' -m pacifica.notifications;
-  ret_val=$?;
-  if [[ $ret_val == 0 ]] ; then exit -1; fi;
-- >
-  coverage run --include '*/site-packages/pacifica/notifications/*' -a cmd_test.py dbchk --equal;
-  ret_val=$?;
-  if [[ $ret_val == 0 ]] ; then exit -1; fi;
-- >
-  coverage run --include '*/site-packages/pacifica/notifications/*' -a cmd_test.py dbchk;
-  ret_val=$?;
-  if [[ $ret_val == 0 ]] ; then exit -1; fi;
-- coverage run --include '*/site-packages/pacifica/notifications/*' -a cmd_test.py dbsync
-- rm -f db.sqlite3
-- coverage run --include '*/site-packages/pacifica/notifications/*' -a cmd_test.py dbsync
-- coverage run --include '*/site-packages/pacifica/notifications/*' -a cmd_test.py dbchk --equal
-- coverage run --include '*/site-packages/pacifica/notifications/*' -a cmd_test.py dbchk
-- coverage run --include '*/site-packages/pacifica/notifications/*' -am pacifica.notifications --stop-after-a-moment
-- coverage run --include='*/site-packages/pacifica/notifications/*' -p -m celery -A pacifica.notifications.tasks worker -c 1 -P solo -l info &
-- coverage run --include='*/site-packages/pacifica/notifications/*' -p -m pytest -xv
-- celery -A pacifica.notifications.tasks control shutdown || true
-- coverage combine -a .coverage*
+- coverage run --include='*/pacifica/notifications/*' -m pytest -xsv
 - coverage report -m --fail-under 100
 before_script:
 - pip install ansible
@@ -90,4 +67,3 @@ jobs:
         tags: true
 install:
 - pip install -r requirements-dev.txt
-- pip install 'celery[redis]' 'redis'
