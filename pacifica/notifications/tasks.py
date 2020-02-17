@@ -97,5 +97,5 @@ def route_event(eventmatch, event_obj):
         disable_eventmatch(eventmatch['uuid'], str(ex))
         return
     resp_major = int(int(resp.status_code)/100)
-    if resp_major == 5 or resp_major == 4:
+    if resp_major in (5, 4):
         disable_eventmatch(eventmatch['uuid'], resp.text)

@@ -19,17 +19,17 @@ def get_config():
     })
     configparser.add_section('celery')
     configparser.set('celery', 'broker_url', getenv(
-        'BROKER_URL', 'pyamqp://'))
+        'BROKER_URL', 'redis://localhost:6379/0'))
     configparser.set('celery', 'backend_url', getenv(
         'BACKEND_URL', 'rpc://'))
     configparser.add_section('notifications')
     configparser.set('notifications', 'user_header', getenv(
         'USER_HEADER', 'Http-Remote-User'))
     configparser.set('notifications', 'policy_url', getenv(
-        'POLICY_URL', 'http://127.0.0.1:8181'))
+        'POLICY_URL', 'http://localhost:8181'))
     configparser.add_section('database')
     configparser.set('database', 'peewee_url', getenv(
-        'PEEWEE_URL', 'sqliteext:///db.sqlite3'))
+        'PEEWEE_URL', 'postgres://notifications:notifications@localhost/pacifica_notifications'))
     configparser.set('database', 'connect_attempts', getenv(
         'DATABASE_CONNECT_ATTEMPTS', '10'))
     configparser.set('database', 'connect_wait', getenv(

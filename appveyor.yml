@@ -22,8 +22,7 @@ install:
     Start-Process C:\elasticsearch\elasticsearch-5.6.5\bin\elasticsearch;
     C:\pacifica\Scripts\activate.ps1;
     python -m pip install --upgrade pip setuptools wheel;
-    python -m pip install -r requirements-dev.txt;
-    python -m pip install 'celery[redis]' 'redis';
+    pip install -r requirements-dev.txt;
     echo 'Done';
 
 build: off
@@ -57,27 +56,7 @@ test_script:
     mkdir C:\tmp; C:\pacifica\Scripts\activate.ps1;
     pre-commit run -a;
     $env:NOTIFICATIONS_CPCONFIG = "$PWD/server.conf";
+    pip install .;
     cd tests;
-    pip install pacifica-notifications==0.2.3;
-    python -c 'from pacifica.notifications.orm import database_setup; database_setup()';
-    pip install ..;
-    echo "This command should fail";
-    coverage run --include='*/site-packages/pacifica/notifications/*' -m pacifica.notifications;
-    if ($LastExitCode -eq 0) { $host.SetShouldExit(-1); };
-    coverage run --include='*/site-packages/pacifica/notifications/*' -a cmd_test.py dbchk --equal;
-    if ($LastExitCode -eq 0) { $host.SetShouldExit(-1); };
-    coverage run --include='*/site-packages/pacifica/notifications/*' -a cmd_test.py dbchk;
-    if ($LastExitCode -eq 0) { $host.SetShouldExit(-1); };
-    coverage run --include='*/site-packages/pacifica/notifications/*' -a cmd_test.py dbsync;
-    rm -Force db.sqlite3;
-    coverage run --include='*/site-packages/pacifica/notifications/*' -a cmd_test.py dbsync;
-    coverage run --include='*/site-packages/pacifica/notifications/*' -a cmd_test.py dbchk --equal;
-    coverage run --include='*/site-packages/pacifica/notifications/*' -a cmd_test.py dbchk;
-    coverage run --include='*/site-packages/pacifica/notifications/*' -am pacifica.notifications --stop-after-a-moment;
-    $celery_proc = Start-Process C:\pacifica\Scripts\coverage.exe -ArgumentList "run --include=*/site-packages/pacifica/notifications/* -p -m celery -A pacifica.notifications.tasks worker -l info -c 1 -P solo" -RedirectStandardError celery-error.log -RedirectStandardOutput celery-output.log;
-    sleep 3;
-    coverage run --include='*/site-packages/pacifica/notifications/*' -p -m pytest -vx;
-    python -m celery -A pacifica.notifications.tasks control shutdown;
-    $celery_proc | Wait-Process;
-    ls .coverage* | %{ python -m coverage combine -a $_.name };
+    coverage run --include='*/pacifica/notifications/*' -m pytest -vsx;
     coverage report -m --fail-under=100;

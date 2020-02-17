@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """Test the example module."""
-from os.path import join
+from os.path import join, dirname
 from datetime import datetime
 from time import sleep
 from json import loads, dumps
 import requests
 from cherrypy.test import helper
 from pacifica.notifications.orm import EventMatch
-from common_test import NotificationsCPTest, eventmatch_droptables
+from .common_test import NotificationsCPTest, eventmatch_droptables
 
 
 class CeleryCPTest(NotificationsCPTest, helper.CPWebCase):
@@ -39,7 +39,7 @@ class CeleryCPTest(NotificationsCPTest, helper.CPWebCase):
             eventmatch_obj['target_url'], 'http://127.0.0.1:8080/something/no/where'
         )
         uuid_list.append(eventmatch_obj['uuid'])
-        event_obj = loads(open(join('test_files', 'events.json')).read())
+        event_obj = loads(open(join(dirname(__file__), 'test_files', 'events.json')).read())
         resp = requests.post(
             '{}/receive'.format(self.url),
             data=dumps(event_obj),
@@ -72,7 +72,7 @@ class CeleryCPTest(NotificationsCPTest, helper.CPWebCase):
         self.assertEqual(
             eventmatch_obj['target_url'], 'http://127.0.0.1:8192/something/no/where'
         )
-        event_obj = loads(open(join('test_files', 'events.json')).read())
+        event_obj = loads(open(join(dirname(__file__), 'test_files', 'events.json')).read())
         resp = requests.post(
             '{}/receive'.format(self.url),
             data=dumps(event_obj),
@@ -95,7 +95,7 @@ class CeleryCPTest(NotificationsCPTest, helper.CPWebCase):
         )
         eventmatch_obj = resp.json()
         self.assertEqual(eventmatch_obj['user'], 'dmlb2001')
-        event_obj = loads(open(join('test_files', 'events.json')).read())
+        event_obj = loads(open(join(dirname(__file__), 'test_files', 'events.json')).read())
         resp = requests.post(
             '{}/receive'.format(self.url),
             data=dumps(event_obj),

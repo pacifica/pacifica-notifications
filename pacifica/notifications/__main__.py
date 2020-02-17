@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """The main module for executing the CherryPy server."""
 import os
+from sys import argv as sys_argv
 from time import sleep
 from argparse import ArgumentParser, SUPPRESS
 from threading import Thread
@@ -30,7 +31,7 @@ def stop_later(doit=False):
     sleep_thread.start()
 
 
-def cmd():
+def cmd(*argv):
     """Admin command line tool."""
     parser = ArgumentParser(description='Notifications admin tool.')
     parser.add_argument(
@@ -52,16 +53,24 @@ def cmd():
         dest='check_equal', action='store_true'
     )
     dbchk_parser.set_defaults(func=dbchk)
-    args = parser.parse_args()
+    if not argv:  # pragma: no cover
+        argv = sys_argv[1:]
+    args = parser.parse_args(argv)
     return args.func(args)
 
 
-def main():
+def main(*argv):
     """Main method to start the httpd server."""
     parser = ArgumentParser(description='Run the notifications server.')
     parser.add_argument(
-        '-c', '--config', metavar='CONFIG', type=str, default=CHERRYPY_CONFIG,
-        dest='config', help='cherrypy config file'
+        '-c', '--config', metavar='CONFIG', type=str,
+        default=CONFIG_FILE, dest='config',
+        help='notifications config file'
+    )
+    parser.add_argument(
+        '--cpconfig', metavar='CONFIG', type=str,
+        default=CHERRYPY_CONFIG, dest='cpconfig',
+        help='cherrypy config file'
     )
     parser.add_argument(
         '-p', '--port', metavar='PORT', type=int, default=8070, dest='port',
@@ -75,7 +84,9 @@ def main():
         '--stop-after-a-moment', help=SUPPRESS, default=False,
         dest='stop_later', action='store_true'
     )
-    args = parser.parse_args()
+    if not argv:  # pragma: no cover
+        argv = sys_argv[1:]
+    args = parser.parse_args(argv)
     OrmSync.dbconn_blocking()
     if not NotificationSystem.is_safe():
         raise OperationalError('Database version too old {} update to {}'.format(
@@ -88,7 +99,7 @@ def main():
         'server.socket_host': args.address,
         'server.socket_port': args.port
     })
-    cherrypy.quickstart(Root(), '/', args.config)
+    cherrypy.quickstart(Root(), '/', args.cpconfig)
 
 
 def bool2cmdint(command_bool):
@@ -102,7 +113,7 @@ def dbsync(args):
     """Create/Update the database schema to current code."""
     os.environ['NOTIFICATIONS_CONFIG'] = args.config
     OrmSync.dbconn_blocking()
-    return OrmSync.update_tables()
+    return bool2cmdint(OrmSync.update_tables())
 
 
 def dbchk(args):
@@ -112,7 +123,3 @@ def dbchk(args):
     if args.check_equal:
         return bool2cmdint(NotificationSystem.is_equal())
     return bool2cmdint(NotificationSystem.is_safe())
-
-
-if __name__ == '__main__':
-    main()
