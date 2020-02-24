@@ -5,13 +5,14 @@ import uuid
 from time import sleep
 from datetime import datetime
 from json import loads
-from peewee import Model, CharField, TextField, DateTimeField, UUIDField, OperationalError, IntegerField
+from peewee import Model, CharField, TextField, DateTimeField, UUIDField
+from peewee import OperationalError, IntegerField, ForeignKeyField
 from playhouse.migrate import SchemaMigrator, migrate
 from playhouse.db_url import connect
 from .config import get_config
 from .jsonpath import parse
 
-SCHEMA_MAJOR = 2
+SCHEMA_MAJOR = 3
 SCHEMA_MINOR = 0
 DB = connect(get_config().get('database', 'peewee_url'))
 
@@ -50,7 +51,8 @@ class OrmSync:
     versions = [
         (0, 0),
         (1, 0),
-        (2, 0)
+        (2, 0),
+        (3, 0)
     ]
 
     @staticmethod
@@ -87,6 +89,13 @@ class OrmSync:
                 TextField(null=True)
             )
         )
+
+    @classmethod
+    def update_2_0_to_3_0(cls):
+        """Update by adding the auth column."""
+        for orm_obj in [EventLog, EventLogMatch]:
+            if not orm_obj.table_exists():
+                orm_obj.create_table()
 
     @classmethod
     def update_tables(cls):
@@ -187,6 +196,21 @@ class NotificationSystem(BaseModel):
         return major == SCHEMA_MAJOR
 
 
+class EventLog(BaseModel):
+    """Events matching via jsonpath per user."""
+
+    uuid = UUIDField(primary_key=True, default=uuid.uuid4, index=True)
+    jsondata = TextField()
+    created = DateTimeField(default=datetime.now, index=True)
+
+    # pylint: disable=too-few-public-methods
+    class Meta:
+        """The meta class that contains db connection."""
+
+        database = DB
+    # pylint: enable=too-few-public-methods
+
+
 class EventMatch(BaseModel):
     """Events matching via jsonpath per user."""
 
@@ -232,3 +256,23 @@ class EventMatch(BaseModel):
                 ret_obj[dt_element] = getattr(self, dt_element).isoformat()
                 # pylint: enable=no-member
         return ret_obj
+
+
+class EventLogMatch(BaseModel):
+    """Events matching via jsonpath per user."""
+
+    uuid = UUIDField(primary_key=True, default=uuid.uuid4, index=True)
+    event_log = ForeignKeyField(EventLog, backref='event_matches')
+    event_match = ForeignKeyField(EventMatch, backref='event_logs')
+    policy_status_code = TextField()
+    policy_resp_body = TextField()
+    target_status_code = TextField(default='')
+    target_resp_body = TextField(default='')
+    created = DateTimeField(default=datetime.now, index=True)
+
+    # pylint: disable=too-few-public-methods
+    class Meta:
+        """The meta class that contains db connection."""
+
+        database = DB
+    # pylint: enable=too-few-public-methods
