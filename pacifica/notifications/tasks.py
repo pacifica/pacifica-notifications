@@ -6,7 +6,7 @@ from json import dumps
 import requests
 from requests.exceptions import RequestException
 from celery import Celery
-from .orm import EventMatch
+from .orm import EventMatch, EventLog, EventLogMatch
 from .jsonpath import parse, find
 from .config import get_config
 
@@ -20,6 +20,12 @@ CELERY_APP = Celery(
 @CELERY_APP.task
 def dispatch_event(event_obj):
     """Get all the events and see which match."""
+    EventLog.database_connect()
+    orm_event = EventLog.create(
+        jsondata=dumps(event_obj)
+    )
+    orm_event.save()
+    EventLog.database_close()
     EventMatch.database_connect()
     eventmatch_objs = EventMatch.select().where(
         (EventMatch.deleted >> None) &
@@ -29,7 +35,7 @@ def dispatch_event(event_obj):
     for eventmatch in eventmatch_objs:
         jsonpath_expr = parse(eventmatch.jsonpath)
         if find(jsonpath_expr, event_obj):
-            query_policy.delay(eventmatch.to_hash(), event_obj)
+            query_policy.delay(eventmatch.to_hash(), event_obj, orm_event.uuid)
 
 
 def disable_eventmatch(eventmatch_uuid, error):
@@ -42,9 +48,30 @@ def disable_eventmatch(eventmatch_uuid, error):
         eventmatch.save()
     EventMatch.database_close()
 
+def create_log_match(eventmatch, event_log_uuid, policy_resp):
+    """Create the EventLogMatch object."""
+    EventLogMatch.database_connect()
+    orm_elm = EventLogMatch.create(
+        event_log=event_log_uuid,
+        event_match=eventmatch.uuid,
+        policy_status_code=policy_resp.status_code,
+        policy_resp_body=policy_resp.text
+    )
+    orm_elm.save()
+    EventLogMatch.database_close()
+    return orm_elm.uuid
+
+def update_log_match(elm_uuid, target_resp):
+    """Update the EventLogMatch object with the target resp."""
+    EventLogMatch.database_connect()
+    orm_elm = EventLogMatch.get_by_id(elm_uuid)
+    orm_elm.target_status_code = target_resp.status_code
+    orm_elm.target_resp_body = target_resp.text
+    orm_elm.save()
+    EventLogMatch.database_close()
 
 @CELERY_APP.task
-def query_policy(eventmatch, event_obj):
+def query_policy(eventmatch, event_obj, event_log_uuid):
     """Query policy server to see if the event should be routed."""
     resp = requests.post(
         '{}/events/{}'.format(
@@ -56,11 +83,13 @@ def query_policy(eventmatch, event_obj):
     )
     resp_major = int(int(resp.status_code)/100)
     if resp_major == 5:
+        create_log_match(eventmatch, event_log_uuid, resp)
         disable_eventmatch(eventmatch['uuid'], resp.text)
     if resp_major == 4:
         return
     if resp_major == 2:
-        route_event.delay(eventmatch, event_obj)
+        elm_uuid = create_log_match(eventmatch, event_log_uuid, resp)
+        route_event.delay(eventmatch, event_obj, elm_uuid)
 
 
 def event_auth_to_requests(eventmatch, headers):
@@ -79,7 +108,7 @@ def event_auth_to_requests(eventmatch, headers):
 
 
 @CELERY_APP.task
-def route_event(eventmatch, event_obj):
+def route_event(eventmatch, event_obj, elm_uuid):
     """Route the event to the target url."""
     try:
         new_extensions = event_obj.get('extensions', {})
@@ -94,8 +123,10 @@ def route_event(eventmatch, event_obj):
             **extra_args
         )
     except RequestException as ex:
+        update_log_match(elm_uuid, resp)
         disable_eventmatch(eventmatch['uuid'], str(ex))
         return
     resp_major = int(int(resp.status_code)/100)
     if resp_major in (5, 4):
         disable_eventmatch(eventmatch['uuid'], resp.text)
+    update_log_match(elm_uuid, resp)
