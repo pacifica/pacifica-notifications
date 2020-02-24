@@ -7,7 +7,7 @@ import threading
 import requests
 import cherrypy
 from celery.bin.celery import main as celery_main
-from pacifica.notifications.orm import EventMatch, NotificationSystem, DB
+from pacifica.notifications.orm import EventMatch, EventLogMatch, EventLog, NotificationSystem, DB
 from pacifica.notifications.rest import Root, error_page_default
 from pacifica.notifications.globals import CHERRYPY_CONFIG
 
@@ -16,12 +16,15 @@ def eventmatch_droptables(func):
     """Setup the database and drop it once done."""
     def wrapper(*args, **kwargs):
         """Create the database table."""
-        EventMatch.database_connect()
-        if EventMatch.table_exists():
-            EventMatch.drop_table()
-        EventMatch.create_table()
+        for orm_obj in [EventLogMatch, EventMatch, EventLog]:
+            orm_obj.database_connect()
+            if orm_obj.table_exists():
+                orm_obj.drop_table()
+        for orm_obj in [EventLog, EventMatch, EventLogMatch]:
+            orm_obj.create_table()
         func(*args, **kwargs)
-        EventMatch.drop_table()
+        for orm_obj in [EventLogMatch, EventMatch, EventLog]:
+            orm_obj.drop_table()
     return wrapper
 
 
