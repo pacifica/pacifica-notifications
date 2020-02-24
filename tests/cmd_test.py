@@ -26,7 +26,7 @@ except ImportError:
             return pbs.Command(attr)
     sh = Sh()
 import peewee
-from pacifica.notifications.orm import EventMatch, NotificationSystem
+from pacifica.notifications.orm import EventMatch, NotificationSystem, EventLogMatch, EventLog
 from pacifica.notifications.__main__ import cmd, main
 
 
@@ -61,7 +61,9 @@ class TestAdminCmdBase:
     @classmethod
     def setUp(cls):
         """Setup the db for the test."""
+        EventLogMatch.drop_table(safe=True)
         EventMatch.drop_table(safe=True)
+        EventLog.drop_table(safe=True)
         NotificationSystem.drop_table(safe=True)
         cls._get_python_cmd()(
             '-c', 'import sys; from pacifica.notifications.orm import database_setup; sys.exit(database_setup())'
