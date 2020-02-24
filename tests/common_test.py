@@ -69,7 +69,7 @@ class NotificationsCPTest:
     # pylint: disable=invalid-name
     def setUp(self):
         """Setup the database with in memory sqlite."""
-        DB.drop_tables([EventMatch, NotificationSystem], safe=True)
+        DB.drop_tables([EventLogMatch, EventLog, EventMatch, NotificationSystem], safe=True)
 
         def run_celery_worker():
             """Run the main solo worker."""
