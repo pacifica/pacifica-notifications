@@ -48,18 +48,20 @@ def disable_eventmatch(eventmatch_uuid, error):
         eventmatch.save()
     EventMatch.database_close()
 
+
 def create_log_match(eventmatch, event_log_uuid, policy_resp):
     """Create the EventLogMatch object."""
     EventLogMatch.database_connect()
     orm_elm = EventLogMatch.create(
         event_log=event_log_uuid,
-        event_match=eventmatch.uuid,
+        event_match=eventmatch['uuid'],
         policy_status_code=policy_resp.status_code,
         policy_resp_body=policy_resp.text
     )
     orm_elm.save()
     EventLogMatch.database_close()
     return orm_elm.uuid
+
 
 def update_log_match(elm_uuid, target_resp):
     """Update the EventLogMatch object with the target resp."""
@@ -69,6 +71,7 @@ def update_log_match(elm_uuid, target_resp):
     orm_elm.target_resp_body = target_resp.text
     orm_elm.save()
     EventLogMatch.database_close()
+
 
 @CELERY_APP.task
 def query_policy(eventmatch, event_obj, event_log_uuid):
@@ -123,7 +126,6 @@ def route_event(eventmatch, event_obj, elm_uuid):
             **extra_args
         )
     except RequestException as ex:
-        update_log_match(elm_uuid, resp)
         disable_eventmatch(eventmatch['uuid'], str(ex))
         return
     resp_major = int(int(resp.status_code)/100)
