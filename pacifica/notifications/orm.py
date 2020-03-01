@@ -276,3 +276,41 @@ class EventLogMatch(BaseModel):
 
         database = DB
     # pylint: enable=too-few-public-methods
+
+
+def eventget(args):
+    """Get events based on command line argument in args."""
+    query = EventLog.select()
+    if args.events:
+        query = query.where(EventLog.uuid << args.events)
+    else:
+        query = query.where(
+            (EventLog.created < args.end) &
+            (EventLog.created > args.start)
+        ).limit(args.limit)
+    for event_obj in query:
+        print('Event - {}\n{}'.format(event_obj.uuid, event_obj.jsondata))
+        for elm_obj in event_obj.event_matches:
+            print('    ELM {} ({}) policy {} target {}'.format(
+                elm_obj.event_match.uuid,
+                elm_obj.created.isoformat(),
+                elm_obj.policy_status_code,
+                elm_obj.target_status_code
+            ))
+    return True
+
+
+def eventpurge(args):
+    """Purge events based on command line argument in args."""
+    query = EventLog.select()
+    if args.events:
+        query = query.where(EventLog.uuid << args.events)
+    else:
+        query = query.where(
+            (EventLog.created < args.older_than)
+        )
+    for event_obj in query:
+        for elm_obj in event_obj.event_matches:
+            elm_obj.delete_instance()
+        event_obj.delete_instance()
+    return True

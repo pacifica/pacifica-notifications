@@ -106,3 +106,106 @@ class TestAdminCmdSync(TestAdminCmdBase, TestCase):
         except Exception:
             hit_exception = True
         self.assertFalse(hit_exception)
+
+
+class TestAdminCmdEvents(TestAdminCmdBase, TestCase):
+    """Test the database upgrade scripting."""
+
+    event_match_objs = [
+        {
+            'uuid': '7e487ebb-309f-4dd7-bb17-0287b4209e2e',
+            'name': 'Event Match 01',
+            'jsonpath': '$["data"]',
+            'user': 'johndoe',
+            'target_url': 'http://localhost/events'
+        },
+        {
+            'uuid': '45736222-a4d5-48dd-99e2-ea54ae7f6bb7',
+            'name': 'Event Match 02',
+            'jsonpath': '$["data"]',
+            'user': 'janedoe',
+            'target_url': 'http://localhost/events'
+        }
+    ]
+    event_log_objs = [
+        {
+            'uuid': '9419b5b6-6f11-439a-9585-42e272c97da4',
+            'jsondata': '{}'
+        },
+        {
+            'uuid': '474549ce-672c-4771-8b39-c4ecdd951691',
+            'jsondata': '{}'
+        },
+        {
+            'uuid': '390d52b7-0c50-415c-b750-2071520f05ed',
+            'jsondata': '{}'
+        }
+    ]
+    event_log_match_objs = [
+        {
+            'uuid': '40cab09f-547a-432f-8424-bd75a6993170',
+            'event_log': '390d52b7-0c50-415c-b750-2071520f05ed',
+            'event_match': '7e487ebb-309f-4dd7-bb17-0287b4209e2e',
+            'policy_status_code': '201',
+            'policy_resp_body': '{"something": "policy returned"}'
+        },
+        {
+            'uuid': '4728abdb-58e7-4ee2-81a8-ce4ae69eeda4',
+            'event_log': '474549ce-672c-4771-8b39-c4ecdd951691',
+            'event_match': '45736222-a4d5-48dd-99e2-ea54ae7f6bb7',
+            'policy_status_code': '201',
+            'policy_resp_body': '{"something": "policy returned"}'
+        },
+        {
+            'uuid': '0ebfebdd-7de7-47fd-bace-5294f13ef5c0',
+            'event_log': '9419b5b6-6f11-439a-9585-42e272c97da4',
+            'event_match': '45736222-a4d5-48dd-99e2-ea54ae7f6bb7',
+            'policy_status_code': '201',
+            'policy_resp_body': '{"something": "policy returned"}'
+
+        }
+    ]
+
+    @classmethod
+    def setUp(cls):
+        """Call super method and create some data in the db."""
+        super().setUp()
+        cmd('dbsync')
+        for event_match_hash in cls.event_match_objs:
+            event_match_obj = EventMatch(**event_match_hash)
+            event_match_obj.save(force_insert=True)
+        for event_log_hash in cls.event_log_objs:
+            event_log_obj = EventLog(**event_log_hash)
+            event_log_obj.save(force_insert=True)
+        for event_log_match_hash in cls.event_log_match_objs:
+            event_log_match_obj = EventLogMatch(**event_log_match_hash)
+            event_log_match_obj.save(force_insert=True)
+
+    def test_eventget(self):
+        """Test that dbchk doesn't work."""
+        self.assertEqual(cmd('eventget'), 0)
+
+    def test_eventget_with_args(self):
+        """Test some of the arguments with eventget."""
+        self.assertEqual(cmd('eventget', '--start-date', '2020-01-01 00:00:00', '--end-date', '2020-02-01 00:00:00'), 0)
+
+    def test_eventget_wrong_order(self):
+        """Test the reverse of start and end time."""
+        with self.assertRaises(ValueError):
+            cmd('eventget', '--start-date', '2020-03-01 00:00:00', '--end-date', '2020-02-01 00:00:00')
+
+    def test_eventget_with_uuids(self):
+        """Test some of the uuid arguments with eventget."""
+        self.assertEqual(cmd('eventget', '9419b5b6-6f11-439a-9585-42e272c97da4'), 0)
+
+    def test_eventpurge_with_uuids(self):
+        """Test some of the uuid arguments with eventpurge."""
+        self.assertEqual(cmd('eventpurge', '9419b5b6-6f11-439a-9585-42e272c97da4'), 0)
+
+    def test_eventpurge_with_args(self):
+        """Test some of the uuid arguments with eventpurge."""
+        self.assertEqual(cmd('eventpurge', '--older-than-date', '2199-01-01 00:00:00'), 0)
+
+    def test_eventpurge(self):
+        """Test some eventpurge."""
+        self.assertEqual(cmd('eventpurge'), 0)
