@@ -9,7 +9,8 @@ from argparse import ArgumentParser, SUPPRESS
 from threading import Thread
 import cherrypy
 from peewee import OperationalError
-from .orm import OrmSync, NotificationSystem, eventget, eventpurge, SCHEMA_MAJOR, SCHEMA_MINOR
+from .tasks import dispatch_orm_event
+from .orm import OrmSync, EventLog, NotificationSystem, eventget, eventpurge, SCHEMA_MAJOR, SCHEMA_MINOR
 from .rest import Root, error_page_default
 from .globals import CHERRYPY_CONFIG, CONFIG_FILE
 
@@ -61,6 +62,13 @@ def _eventpurge(args):
     else:
         args.older_than = datetime.strptime(args.older_than, args.format)
     return bool2cmdint(eventpurge(args))
+
+
+def _eventretry(args):
+    """Retry events given on the cmdline."""
+    for event_obj in EventLog.select().where(EventLog.uuid << args.events):
+        dispatch_orm_event(event_obj)
+    return 0
 
 
 def _add_dbsync_parser(subparsers):
@@ -133,6 +141,18 @@ def _add_eventpurge_parser(subparsers):
     dbchk_parser.set_defaults(func=_eventpurge)
 
 
+def _add_eventretry_parser(subparsers):
+    """Add the eventretry subcommand arguments."""
+    dbchk_parser = subparsers.add_parser(
+        'eventretry',
+        description='Retry events from the log.'
+    )
+    dbchk_parser.add_argument(
+        'events', nargs='*', type=str, help='Events to purge'
+    )
+    dbchk_parser.set_defaults(func=_eventretry)
+
+
 def cmd(*argv):
     """Admin command line tool."""
     parser = ArgumentParser(description='Notifications admin tool.')
@@ -146,6 +166,7 @@ def cmd(*argv):
     _add_dbchk_parser(subparsers)
     _add_eventget_parser(subparsers)
     _add_eventpurge_parser(subparsers)
+    _add_eventretry_parser(subparsers)
     if not argv:  # pragma: no cover
         argv = sys_argv[1:]
     args = parser.parse_args(argv)

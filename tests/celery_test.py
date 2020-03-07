@@ -7,7 +7,8 @@ from time import sleep
 from json import loads, dumps
 import requests
 from cherrypy.test import helper
-from pacifica.notifications.orm import EventMatch
+from pacifica.notifications.orm import EventMatch, EventLog
+from pacifica.notifications.__main__ import cmd
 from .common_test import NotificationsCPTest, eventmatch_droptables
 
 
@@ -107,5 +108,9 @@ class CeleryCPTest(NotificationsCPTest, helper.CPWebCase):
         eventmatch_obj = EventMatch.get(
             EventMatch.uuid == eventmatch_obj['uuid']
         )
-        EventMatch.database_close()
         self.assertEqual(eventmatch_obj.disabled, None)
+        EventLog.database_connect()
+        eventlog_obj = EventLog.get()
+        self.assertEqual(cmd('eventretry', str(eventlog_obj.uuid)), 0)
+        EventMatch.database_close()
+        EventLog.database_close()

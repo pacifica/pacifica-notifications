@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """The Celery tasks module."""
 from datetime import datetime
-from json import dumps
+from json import dumps, loads
 import requests
 from requests.exceptions import RequestException
 from celery import Celery
@@ -26,6 +26,12 @@ def dispatch_event(event_obj):
     )
     orm_event.save()
     EventLog.database_close()
+    dispatch_orm_event(orm_event)
+
+
+def dispatch_orm_event(orm_event):
+    """Dispatch the event from an existing orm obj."""
+    event_obj = loads(orm_event.jsondata)
     EventMatch.database_connect()
     eventmatch_objs = EventMatch.select().where(
         (EventMatch.deleted >> None) &
