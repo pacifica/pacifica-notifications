@@ -31,6 +31,7 @@ def dispatch_event(event_obj):
 
 def dispatch_orm_event(orm_event):
     """Dispatch the event from an existing orm obj."""
+    results = []
     event_obj = loads(orm_event.jsondata)
     EventMatch.database_connect()
     eventmatch_objs = EventMatch.select().where(
@@ -41,7 +42,8 @@ def dispatch_orm_event(orm_event):
     for eventmatch in eventmatch_objs:
         jsonpath_expr = parse(eventmatch.jsonpath)
         if find(jsonpath_expr, event_obj):
-            query_policy.delay(eventmatch.to_hash(), event_obj, orm_event.uuid)
+            results.append(query_policy.delay(eventmatch.to_hash(), event_obj, orm_event.uuid))
+    return results
 
 
 def disable_eventmatch(eventmatch_uuid, error):

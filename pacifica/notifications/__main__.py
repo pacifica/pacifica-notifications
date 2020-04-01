@@ -66,8 +66,15 @@ def _eventpurge(args):
 
 def _eventretry(args):
     """Retry events given on the cmdline."""
-    for event_obj in EventLog.select().where(EventLog.uuid << args.events):
-        dispatch_orm_event(event_obj)
+    EventLog.database_connect()
+    event_objs = list(EventLog.select().where(EventLog.uuid << args.events).execute())
+    EventLog.database_close()
+    results = []
+    for event_obj in event_objs:
+        results.extend(dispatch_orm_event(event_obj))
+    sleep(3)
+    for result in results:
+        print('{} - {}'.format(result.task_id, result.wait(disable_sync_subtasks=False)))
     return 0
 
 
