@@ -25,8 +25,17 @@ jobs:
   - stage: lint
     before_script: skip
     script: pre-commit run -a
+  - python: 3.7
+    before_script: skip
+    script: pre-commit run -a
+  - python: 3.8
+    before_script: skip
+    script: pre-commit run -a
   - stage: test
+  - python: 3.7
+  - python: 3.8
   - stage: test-docker
+    python: 3.8
     sudo: required
     services:
     - docker
@@ -54,6 +63,7 @@ jobs:
       docker run -t --rm --network=pacifica-notifications_default pacifica/cli upload --logon 10 tests;
   - stage: deploy
     language: python
+    python: 3.8
     before_script: skip
     script: skip
     deploy:
