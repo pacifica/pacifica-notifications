@@ -1,13 +1,15 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """Test the example module."""
+from argparse import Namespace
 from os.path import join, dirname
 from datetime import datetime
 from time import sleep
 from json import loads, dumps
 import requests
 from cherrypy.test import helper
-from pacifica.notifications.orm import EventMatch
+from pacifica.notifications.orm import EventMatch, EventLog
+from pacifica.notifications.__main__ import _eventretry
 from .common_test import NotificationsCPTest, eventmatch_droptables
 
 
@@ -109,3 +111,8 @@ class CeleryCPTest(NotificationsCPTest, helper.CPWebCase):
         )
         EventMatch.database_close()
         self.assertEqual(eventmatch_obj.disabled, None)
+        EventLog.database_connect()
+        eventlog_obj = EventLog.get()
+        EventLog.database_close()
+        fake_args = Namespace(events=[eventlog_obj.uuid])
+        self.assertEqual(_eventretry(fake_args), 0)

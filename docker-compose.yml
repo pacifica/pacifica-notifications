@@ -102,6 +102,8 @@ services:
       PEEWEE_PROTO: postgres
       PEEWEE_PASS: metadata
       NOTIFICATIONS_URL: http://notifyfrontend:8070/receive
+    ports:
+      - 8121:8121
 
   notifyredis:
     image: redis
