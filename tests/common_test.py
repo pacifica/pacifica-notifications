@@ -49,7 +49,7 @@ class NotificationsCPTest:
         local_headers.update(self.headers)
         local_data = {
             'name': 'testevent',
-            'jsonpath': '$.data[?(@.value="Blah")].value',
+            'jsonpath': '$.data.*[?(@.value="Blah")].value',
             'target_url': 'http://127.0.0.1:8080',
             'auth': {
                 'type': 'basic',

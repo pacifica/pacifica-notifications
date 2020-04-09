@@ -10,5 +10,5 @@ def parse(jsonpath_str):
 
 
 def find(expr, data):
-    """Match the expression in the data."""
-    return expr.match(data)
+    """Match the expression in the data and return truthy value."""
+    return bool(list(expr.match(data)))
