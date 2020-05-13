@@ -6,8 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2020-05-13
+### Changed
+- Pull #45 Remove Requirements pip>=20 by [@dmlb2000](https://github.com/dmlb2000)
+
 ## [0.5.1] - 2020-04-09
-### Added
+### Changed
 - Pull #43 `find()` Truthy Return by [@dmlb2000](https://github.com/dmlb2000)
 
 ## [0.5.0] - 2020-04-02
