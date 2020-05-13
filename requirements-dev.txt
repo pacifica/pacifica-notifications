@@ -1,4 +1,3 @@
--r requirements.txt
 celery[redis]
 coverage
 cryptography
@@ -12,6 +11,9 @@ psycopg2
 pylint>2
 pymysql
 pytest
+readthedocs-sphinx-ext
 recommonmark
 redis
 sh; sys_platform != 'win32'
+sphinx
+sphinx-rtd-theme

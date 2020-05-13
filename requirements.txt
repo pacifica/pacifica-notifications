@@ -1,8 +1,0 @@
-celery
-cherrypy
-jsonpath2
-jsonschema
-pacifica-namespace
-peewee
-requests
-setuptools

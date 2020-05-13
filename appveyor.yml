@@ -25,6 +25,7 @@ install:
     C:\pacifica\Scripts\activate.ps1;
     python -m pip install --upgrade pip setuptools wheel;
     pip install -r requirements-dev.txt;
+    pip install .;
     echo 'Done';
 
 build: off
@@ -58,7 +59,6 @@ test_script:
     mkdir C:\tmp; C:\pacifica\Scripts\activate.ps1;
     pre-commit run -a;
     $env:NOTIFICATIONS_CPCONFIG = "$PWD/server.conf";
-    pip install .;
     cd tests;
     coverage run --include='*/pacifica/notifications/*' -m pytest -vsx;
     coverage report -m --fail-under=100;

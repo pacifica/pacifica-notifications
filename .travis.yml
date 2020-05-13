@@ -4,6 +4,7 @@ dist: bionic
 stages:
   - lint
   - test
+  - test-docs
   - test-docker
   - deploy
 env:
@@ -11,7 +12,6 @@ env:
   PEEWEE_URL: postgres://postgres:@localhost/pacifica_metadata
 script:
   - export NOTIFICATIONS_CPCONFIG="$PWD/server.conf"
-  - pip install .
   - cd tests
   - coverage run --include='*/pacifica/notifications/*' -m pytest -xsv
   - coverage report -m --fail-under 100
@@ -34,6 +34,15 @@ jobs:
     - stage: test
     - python: 3.7
     - python: 3.8
+    - stage: test-docs
+      python: 3.8
+      before_script: skip
+      script: >
+        cd docs;
+        sphinx-build -T -E -b readthedocs -d _build/doctrees-readthedocs -D language=en . _build/html;
+        sphinx-build -T -b readthedocssinglehtmllocalmedia -d _build/doctrees-readthedocssinglehtmllocalmedia -D language=en . _build/localmedia;
+        sphinx-build -b latex -D language=en -d _build/doctrees . _build/latex;
+        sphinx-build -T -b epub -d _build/doctrees-epub -D language=en . _build/epub
     - stage: test-docker
       python: 3.8
       sudo: required
@@ -77,3 +86,4 @@ jobs:
           tags: true
 install:
 - pip install -r requirements-dev.txt
+- pip install .
