@@ -158,7 +158,9 @@ class BaseModel(Model):
     @classmethod
     def atomic(cls):
         """Do the database atomic action."""
+        # pylint: disable=no-member
         return cls._meta.database.atomic()
+        # pylint: enable=no-member
 
 
 class NotificationSystem(BaseModel):
@@ -245,8 +247,10 @@ class EventMatch(BaseModel):
     def to_hash(self):
         """Convert the object to a json serializable hash."""
         ret_obj = {}
+        # pylint: disable=no-member
         for field_name in self._meta.sorted_field_names:
             ret_obj[field_name] = getattr(self, field_name)
+        # pylint: enable=no-member
         ret_obj['uuid'] = str(ret_obj['uuid'])
         ret_obj['extensions'] = loads(ret_obj['extensions'])
         ret_obj['auth'] = loads(ret_obj['auth'])

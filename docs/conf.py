@@ -18,7 +18,6 @@
 #
 from os import environ
 from os.path import abspath, join
-from recommonmark.parser import CommonMarkParser
 
 environ['NOTIFICATIONS_CPCONFIG'] = join(abspath('..'), 'server.conf')
 
@@ -46,6 +45,8 @@ release = ''
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
+    'readthedocs_ext.readthedocs',
+    'recommonmark'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -54,9 +55,6 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-source_parsers = {
-    '.md': CommonMarkParser,
-}
 source_suffix = ['.rst', '.md']
 
 # The master toctree document.
