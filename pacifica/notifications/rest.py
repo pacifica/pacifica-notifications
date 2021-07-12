@@ -203,4 +203,12 @@ class Root:
     exposed = True
     eventmatch = EventMatch()
     receive = ReceiveEvent()
+
+    @staticmethod
+    @cherrypy.tools.json_out()
+    # pylint: disable=invalid-name
+    def GET():
+        """Return happy message about functioning service."""
+        return {'message': 'Pacifica Notifications Up and Running'}
+    # pylint: enable=invalid-name
 # pylint: enable=too-few-public-methods

@@ -11,6 +11,15 @@ class EventMatchCPTest(NotificationsCPTest, helper.CPWebCase):
     """Test the EventMatch class."""
 
     @eventmatch_droptables
+    def test_happy(self):
+        """Test the create POST method in EventMatch."""
+        resp = requests.get('{}/'.format(self.url))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue('Content-Type' in resp.headers)
+        self.assertEqual(resp.headers['Content-Type'], 'application/json')
+        self.assertTrue('message' in resp.json())
+
+    @eventmatch_droptables
     def test_create(self):
         """Test the create POST method in EventMatch."""
         resp = self._create_eventmatch()
